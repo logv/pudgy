@@ -11,6 +11,7 @@ function inject_css(name, css) {
   if (_injected_css[name]) {
     return css;
   }
+  debug("INJECTED CSS FOR", name);
 
   var to_inject;
   if (_.isString(css)) {
@@ -55,6 +56,10 @@ function wait_for_refs(refs, cb) {
 }
 
 function find_replacement_refs(d, out) {
+  if (_.isElement(d)) {
+    return d;
+  }
+
   if (_.isObject(d)) {
     if (d._R) {
       out[d._R] = d._R;
@@ -74,6 +79,10 @@ function find_replacement_refs(d, out) {
 // recursively walk down d and replace references
 // with their actual components
 function replace_refs(d) {
+  if (_.isElement(d)) {
+    return d;
+  }
+
   if (_.isObject(d)) {
     if (d._R) {
       // replace ref
@@ -102,27 +111,19 @@ module.exports = {
     context.id = id;
 
     var cmpEl = document.getElementById(id);
-    if (display_immediately) {
-      $(cmpEl).css("visibility", "inherit");
-
-    }
-
-
-
-
     $C(name, function(cmp) {
       debug("LOADED COMPONENT PACKAGE", id, name);
 
       if (!cmp.backboneClass) {
-        inject_css(name, cmp.css);
+        inject_css("scoped_" + name, cmp.css);
+
         cmp.backboneClass = Backbone.View.extend(cmp.exports);
       }
 
       context.id = id;
       context.el = cmpEl;
       $(context.el).addClass("scoped_" + name);
-      $(context.el).css("visibility", "inherit");
-      $(context.el).fadeIn();
+      debug("SHOWING COMPONENT", name);
 
       var refs = {};
       find_replacement_refs(context, refs);
@@ -132,6 +133,7 @@ module.exports = {
         var cmpInst = new cmp.backboneClass(context);
         LOADED_COMPONENTS[id] = cmpInst;
         debug("INSTANTIATED COMPONENT", id, name, cmpInst);
+        inject_css("display_" + id, "\n#" + id + " { display: block !important } \n");
         cmp_events.trigger("cmp::" + id);
       });
     });

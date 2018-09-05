@@ -1,2 +1,7 @@
 <script src="{{ url_for('components.get_prelude') }}" > </script>
+
+<script type="text/javascript" name="setversions">
+  $C.set_versions({{ versions | safe }});
+</script>
+
 {{ html | safe }}
