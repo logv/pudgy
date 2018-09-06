@@ -1,10 +1,19 @@
 import flask
 import jinja2
 
-# we export these components, as well
-# TODO: make the mixins take a first param
-# that validates the existence of that file to reduce dynamism
+# JinjaComponent: foo/foo.html
+# BackboneComponent: foo/foo.js
+# MustacheComponent: foo/foo.mustache
+# SassComponent: foo/foo.css (runs it through sass pre-processor)
+# CSSComponent:  foo/foo.css (doesn't run it through pre-processor)
+
+# ClientBridge: requires foo/foo.js, exposes the client API on the server
+# ServerBridge: requires foo/foo.js, exposes the server API on the client
+
+# FlaskPage: takes template to render as named parameter
+# BigPackage: renders the component as one large package instead of a split
+
 from .components import Component, BackboneComponent, MustacheComponent, \
     SassComponent, CSSComponent, JinjaComponent, Page, FlaskPage, ClientBridge, \
-    ServerBridge
+    ServerBridge, BigPackage
 

@@ -23,9 +23,9 @@ class DemoPage(ServerBridge, FlaskPage):
     pass
 
 @DemoPage.api
-def server_call(foo):
-    return { "data" : "some custom data" }
-
+def server_call(cmp, foo):
+    cmp.call("handle_data", data="some_custom_data")
+    return { "some_data": "HANDLING DATA" }
 
 @app.route("/")
 def hello():

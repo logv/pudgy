@@ -2,9 +2,19 @@ module.exports = {
   initialize: function(ctx) {
     console.log("LOADED DEMO PAGE", ctx);
   },
-  SetComponent: function fn(cmp) {
-    console.log("SETTING COMPONENT", cmp);
+  SetComponent: function(cmp) {
+    this.rpc
+      .server_call("FOOBAR")
+      .done(function(res, error) {
+        if (error) {
+          console.log("ERR", error);
+          return
+        }
 
-//    this.bridge.server_call("FOOBAR");
+        console.log("server_call SUCCESS", res);
+      });
+  },
+  handle_data: function fn() {
+    console.log("SERVER INVOKED RPC", fn.__kwargs__, fn.__args__);
   }
 };

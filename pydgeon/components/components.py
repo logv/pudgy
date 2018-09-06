@@ -36,6 +36,11 @@ class Component(object):
 
     @classmethod
     @memoize
+    def get_defines(cls):
+        pass
+
+    @classmethod
+    @memoize
     def get_requires(cls):
         js = cls.get_js()
         requires = REQUIRE_RE.findall(js)
@@ -79,16 +84,15 @@ class Component(object):
     @memoize
     def test_package(cls):
         if cls.__name__ in VIRTUAL_COMPONENTS:
-            return True
+            return
 
         try:
             pkg = cls.get_package()
         except Exception as e:
             print("ERROR IN PACKAGE", cls.__name__)
-            print(e)
-            return False
+            raise e
 
-        return True
+        return
 
 
     @classmethod
@@ -99,6 +103,7 @@ class Component(object):
         c = cls.get_css()
         j = cls.get_js()
         r = cls.get_requires()
+        d = cls.get_defines()
 
         if t:
             ret["template"] = t
@@ -111,6 +116,9 @@ class Component(object):
 
         if r:
             ret["requires"] = r
+
+        if d:
+            ret["defines"] = d
 
         return flask.jsonify(ret)
 
@@ -218,6 +226,55 @@ class JSComponent(Component):
         with open(cls.get_file_for_ext("js")) as f:
             return f.read()
 
+    @classmethod
+    def render_requires(cls, requested):
+        base_dir = cls.BASE_DIR
+        def render_requires_for_js(js, basedir):
+            requires = REQUIRE_RE.findall(js)
+            ret = {}
+            for p in requires:
+                p = p.strip("'\"")
+                if p[0] == ".":
+                    jsp = "%s.js" % os.path.join(base_dir, basedir, p)
+                else:
+                    jsp = "%s.js" % (os.path.join(base_dir, p))
+
+                if os.path.exists(jsp):
+                    with open(jsp) as f:
+                        js = f.read()
+                        ret[p] = js
+                else:
+                    print("MISSING REQUIRE FILE", jsp, component)
+                    ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, component)
+                    continue
+
+                ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
+
+            return ret
+
+        def render_requires(component, basedir):
+            ret = {}
+
+            requires = set(component.get_requires()).intersection(set(requested))
+
+            for p in requires:
+                p = p.strip("'\"")
+                if p[0] == ".":
+                    jsp = "%s.js" % os.path.join(base_dir, basedir, p)
+                else:
+                    jsp = "%s.js" % (os.path.join(base_dir, p))
+                with open(jsp) as f:
+                    js = f.read()
+                    ret[p] = js
+
+                ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
+
+
+
+            return ret
+
+        return render_requires(cls, cls.__name__)
+
     def __activate__(self):
         t = """activate_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }} )"""
         rendered =  pystache.render(t, self)
@@ -245,10 +302,15 @@ class BackboneComponent(JSComponent):
         self.__marshal__()
         return { "_R" : self.__html_id__() }
 
+    def set_ref(self, name):
+        # TODO: validate there is only one of each named ref on the page
+        self.__ref__ = name
+        return self
+
     def __activate__(self):
         t = """
             $C("ComponentLoader", function(m) {
-                m.exports.activate_backbone_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }} )
+                m.exports.activate_backbone_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }}, "{{ __ref__ }}" )
             });
         """.strip()
         rendered =  pystache.render(t, self)
@@ -266,9 +328,6 @@ class MustacheComponent(Component):
         rendered =  pystache.render(template_str, self.context)
         return self.__wrap_div__(rendered)
 
-class ComponentLoader(CoreComponent, MustacheComponent, JSComponent):
-    WRAP_COMPONENT = False
-
 # for a Page to be a proper Component, it needs to give an ID to its body
 class Page(Component):
     def __init__(self, *args, **kwargs):
@@ -279,6 +338,32 @@ class Page(Component):
         t = '$("body").attr("id", "%s");' % (self.__html_id__())
         rendered = "%s\n%s" % (t, super(Page, self).__activate__())
         return jinja2.Markup(rendered)
+
+# A Big Package will automatically include its requires into a
+# package definition
+class BigPackage(JSComponent):
+    @classmethod
+    def get_defines(cls):
+        reqs = cls.get_requires()
+        return cls.render_requires(reqs)
+
+class ComponentLoader(CoreComponent, MustacheComponent, BigPackage):
+    WRAP_COMPONENT = False
+
+class ComponentProxy(object):
+    def __init__(self, cls, id):
+        self.component = cls.__name__
+        self.id = id
+        self.__calls__ = []
+
+    def call(self, fn, *args, **kwargs):
+        self.__calls__.append((fn, args, kwargs))
+
+    def get_calls(self):
+
+        r = [ [self.component, self.id] + list(c) for c in self.__calls__ ]
+        self.__calls__ = []
+        return r
 
 class ClientBridge(BackboneComponent):
     def __init__(self, *args, **kwargs):
@@ -322,12 +407,13 @@ class ServerBridge(ClientBridge):
     def get_js(cls):
         js = super(ClientBridge, cls).get_js()
 
-        all = ["\n  module.exports.bridge = {}\n"]
+        all = [""" module.exports.__bridge = {}; """]
 
 
         t = """
-module.exports.bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn }}");
+module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn }}");
             """.strip()
+
         for c in cls.__remote_calls__:
             all.append(pystache.render(t, {
                 "fn" : c,
@@ -341,9 +427,14 @@ module.exports.bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn }}
         cls.__remote_calls__[fn.__name__] = fn
 
     @classmethod
-    def invoke(cls, fn, args=[], kwargs={}):
-        print("REMOTE INVOKING", cls, fn, args, kwargs)
-        return cls.__remote_calls__[fn](*args, **kwargs)
+    def invoke(cls, cid, fn, args=[], kwargs={}):
+        # we instantiate a proxy for our class instance here,
+        # like:
+        c = ComponentProxy(cls, cid)
+
+        args = [c] + args
+
+        return cls.__remote_calls__[fn](*args, **kwargs), c
 
 
 class FlaskPage(Page):
@@ -367,5 +458,6 @@ mark_virtual(
     BackboneComponent,
     SassComponent,
     CSSComponent,
-    JinjaComponent
+    JinjaComponent,
+    BigPackage
 )

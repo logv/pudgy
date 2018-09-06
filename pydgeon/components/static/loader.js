@@ -34,7 +34,7 @@
     debug("LOADING REQUIRES", requires);
     var needed = {};
     _.each(requires, function(r) {
-      if (!_modules[r]) { needed[r] = r; }
+      if (!_defined[r]) { needed[r] = r; }
     })
 
     if (_.keys(needed).length > 0) {
@@ -64,6 +64,8 @@
 
     PENDING[componentName] = [cb];
     $.get($C._url + componentName, { q: _versions[componentName] }, function(res) {
+      _.each(res.defines, function(v, k) { define_raw(k, v); });
+
       load_requires(componentName, res.requires, function() {
         var klass = raw_import(res.js, componentName);
         COMPONENTS[componentName] = res;
@@ -95,20 +97,23 @@
   window.$C = $C;
   var _modules = {};
   var _versions = {};
-  var _define = {};
+  var _defined = {};
   $C._modules = _modules;
   $C._versions = _versions;
+  $C._refs = {};
   window.define_raw = function(name, mod_code) {
-    _define[name] = mod_code;
+    if (!_defined[name]) {
+      _defined[name] = mod_code;
+    }
   };
 
   window.require = function(mod) {
     debug("GETTING REQUIRE", mod);
 
     if (!_modules[mod]) {
-      if (_define[mod]) {
-        _modules[mod] = raw_import(_define[mod], mod);
-        _define[mod] = "console.log('Trying to redefine " + mod + " ');";
+      if (_defined[mod]) {
+        _modules[mod] = raw_import(_defined[mod], mod);
+        _defined[mod] = "console.log('Trying to redefine " + mod + " ');";
       }
     }
 

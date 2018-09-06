@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import jinja2
 import flask
 import json
@@ -37,24 +39,26 @@ def invoke(component, fn):
     found = get_component_by_name(component)
 
     js = flask.request.get_json()
+    cid = js.get("cid", None)
     args = js.get("args", [])
     kwargs = js.get("kwargs", {})
 
     err = None
     ret = None
+
+    res = {}
+
     try:
-        ret = found.invoke(fn, args, kwargs)
+        ret, proxy = found.invoke(cid, fn, args, kwargs)
+        res["response"] = ret
+        res["calls"] = proxy.get_calls()
     except Exception as e:
         err = str(e)
+        res["error"] = err
         print("ERROR INVOKING", component, fn, e)
 
-    calls = []
 
-    return flask.jsonify({
-        "response" : ret,
-        "error" : err,
-        "calls" : calls
-    });
+    return flask.jsonify(res)
 
 
 @simple_component.route('/<component>/requires')
@@ -62,55 +66,8 @@ def get_requires(component):
     requested = flask.request.args.getlist('requires[]')
 
     found = get_component_by_name(component)
-    componentName = found.__name__
-    base_dir = found.BASE_DIR
-    def render_requires_for_js(js, basedir):
-        requires = components.REQUIRE_RE.findall(js)
-        ret = {}
-        for p in requires:
-            p = p.strip("'\"")
-            if p[0] == ".":
-                jsp = "%s.js" % os.path.join(base_dir, basedir, p)
-            else:
-                jsp = "%s.js" % (os.path.join(base_dir, p))
-
-            if os.path.exists(jsp):
-                with open(jsp) as f:
-                    js = f.read()
-                    ret[p] = js
-            else:
-                print("MISSING REQUIRE FILE", jsp, component)
-                ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, component)
-                continue
-
-            ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
-
-        return ret
-
-    def render_requires(component, basedir):
-        ret = {}
-
-        requires = set(component.get_requires()).intersection(set(requested))
-
-        for p in requires:
-            p = p.strip("'\"")
-            if p[0] == ".":
-                jsp = "%s.js" % os.path.join(base_dir, basedir, p)
-            else:
-                jsp = "%s.js" % (os.path.join(base_dir, p))
-            with open(jsp) as f:
-                js = f.read()
-                ret[p] = js
-
-            ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
-
-
-
-        return flask.jsonify(ret)
-
-    # TODO: scoped component css
     if found:
-        return render_requires(found, found.__name__)
+        return flask.jsonify(found.render_requires(requested))
 
     abort(404)
 
@@ -126,6 +83,7 @@ def show(component):
 
 def add_components():
     flask.request.components = set()
+    flask.request.bridge_calls = []
 
 def marshal_components(prelude=True):
     from . import components
@@ -193,8 +151,10 @@ def add_cache_header(response):
 @simple_component.before_app_first_request
 @memoize
 def validate_components():
+    from .components import VIRTUAL_COMPONENTS
+
     valid = 0
-    broken = 0
+    broken = []
     for c in util.inheritors(components.Component):
         try:
             pkg = c.test_package()
@@ -202,12 +162,14 @@ def validate_components():
         except Exception as e:
             s = "%s Errors:" % (c.__name__)
             s_ = "-" *  len(s)
-            broken += 1
+            broken.append(c.__name__)
             print(s)
             print(s_)
             print(e)
 
-    print("Validated %s components before first request, %s broken" % (valid + broken, broken))
+    print("Validated %s components before first request, %s broken" % (valid + len(broken) - len(VIRTUAL_COMPONENTS), len(broken)))
+    if broken:
+        print("Broken:", ",".join(broken))
 
 def install(app):
     global APP

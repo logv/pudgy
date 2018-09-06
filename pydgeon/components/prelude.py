@@ -2,11 +2,12 @@ from . import components
 
 import os
 
-PRELUDE = [ 
-    "loader.js", 
+PRELUDE = [
+    "loader.js",
     "vendor/jquery-3.3.1.min.js",
     "vendor/underscore.js",
-    "vendor/backbone.js"
+    "vendor/backbone.js",
+    "vendor/proxy.min.js"
 ]
 
 def make_prelude():
