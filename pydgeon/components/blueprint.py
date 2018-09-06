@@ -7,13 +7,11 @@ from flask import Blueprint, render_template, abort
 simple_component = Blueprint('components', __name__,
                         template_folder='templates', url_prefix='/components',static_folder='static')
 
-import prelude
-import util
-import components
+from . import prelude, util, components
 
 import os
 
-from util import memoize
+from .util import memoize
 
 # TODO: put a hash on the prelude.js when generating it
 @simple_component.route('/prelude.js')
@@ -53,7 +51,7 @@ def get_requires(component):
                     js = f.read()
                     ret[p] = js
             else:
-                print "MISSING REQUIRE FILE", jsp, component
+                print("MISSING REQUIRE FILE", jsp, component)
                 ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, component)
                 continue
 
@@ -102,7 +100,7 @@ def add_components():
     flask.request.components = []
 
 def marshal_components():
-    import components
+    from . import components
     # when lc.__html__ is called, __marshal__ is invoked, so we use lc.render()
     # instead
     lc = components.ComponentLoader()
@@ -167,15 +165,15 @@ def validate_components(app):
             try:
                 pkg = c.test_package()
                 valid += 1
-            except Exception, e:
+            except Exception as e:
                 s = "%s Errors:" % (c.__name__)
                 s_ = "-" *  len(s)
                 broken += 1
-                print s
-                print s_
-                print e
+                print(s)
+                print(s_)
+                print(e)
 
-    print "validated %s components, %s broken" % (valid + broken, broken)
+    print("validated %s components, %s broken" % (valid + broken, broken))
 
 def install(app):
     global APP

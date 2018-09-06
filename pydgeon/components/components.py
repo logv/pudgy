@@ -1,3 +1,6 @@
+from __future__ import division, print_function
+
+
 import pystache
 import dotmap
 import jinja2
@@ -9,13 +12,12 @@ import re
 import hashlib
 
 
-import blueprint
-from blueprint import simple_component
+from .blueprint import simple_component
 
 REQUIRE_RE = re.compile("""require\(['"](.*)['"]\)""")
 VIRTUAL_COMPONENTS = set()
 
-from util import memoize
+from .util import memoize
 
 def dump_values(w):
     if w:
@@ -81,9 +83,9 @@ class Component(object):
 
         try:
             pkg = cls.get_package()
-        except Exception, e:
-            print "ERROR IN PACKAGE", cls.__name__
-            print e
+        except Exception as e:
+            print("ERROR IN PACKAGE", cls.__name__)
+            print(e)
             return False
 
         return True
@@ -181,8 +183,8 @@ class Component(object):
             div = self.__render__()
             wrapped = self.__wrap_div__(div)
             return wrapped
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             raise Exception("NO TEMPLATE TO RENDER", self.__template_name__)
 
 class CoreComponent(Component):

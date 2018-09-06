@@ -1,11 +1,12 @@
 import flask
 
-import components
-from components import Component, FlaskPage, BackboneComponent, MustacheComponent, SassComponent
+from .components import Component, FlaskPage, BackboneComponent, MustacheComponent, SassComponent
+
+from .components import install as install_components
 import os
 
 app = flask.Flask(__name__)
-components.install(app)
+install_components(app)
 
 
 # we set the path for our component library to be in public/ in the app's root dir
