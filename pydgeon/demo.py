@@ -1,9 +1,13 @@
-import flask
+from __future__ import print_function
 
-from .components import Component, FlaskPage, BackboneComponent, MustacheComponent, SassComponent
+import flask
+import os
+
+from .components import Component, FlaskPage, BackboneComponent, MustacheComponent, \
+    SassComponent, ClientBridge, ServerBridge
 
 from .components import install as install_components
-import os
+
 
 app = flask.Flask(__name__)
 install_components(app)
@@ -15,8 +19,13 @@ Component.set_base_dir(os.path.join(app.root_path, "public"))
 class DemoComponent(MustacheComponent, BackboneComponent, SassComponent):
     pass
 
-class DemoPage(FlaskPage):
+class DemoPage(ServerBridge, FlaskPage):
     pass
+
+@DemoPage.api
+def server_call(foo):
+    return { "data" : "some custom data" }
+
 
 @app.route("/")
 def hello():
@@ -26,10 +35,16 @@ def hello():
         about="about this component"
     )
 
-    return DemoPage(
+
+
+    dp = DemoPage(
         template="example.html",
-        component=component
-    ).render()
+        component=component,
+    )
+
+    dp.call("SetComponent", component, filename="foo")
+
+    return dp.render()
 
 
 

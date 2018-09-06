@@ -1,7 +1,14 @@
-<script src="{{ url_for('components.get_prelude') }}" > </script>
+{% if prelude %}
+  <script src="{{ url_for('components.get_prelude') }}" > </script>
+  <script> $C._url = "{{ url_for('components.index') }}"; </script>
+{% endif %}
 
 <script type="text/javascript" name="setversions">
   $C.set_versions({{ versions | safe }});
 </script>
 
-{{ html | safe }}
+{% if html %}
+  {{ html | safe }}
+{% endif %}
+
+{{ postfix }}

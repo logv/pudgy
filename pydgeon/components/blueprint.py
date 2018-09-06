@@ -28,9 +28,37 @@ def get_component_by_name(component):
 
     return found
 
+@simple_component.route("/")
+def index():
+    pass
+
+@simple_component.route('/<component>/invoke/<fn>', methods=['POST'])
+def invoke(component, fn):
+    found = get_component_by_name(component)
+
+    js = flask.request.get_json()
+    args = js.get("args", [])
+    kwargs = js.get("kwargs", {})
+
+    err = None
+    ret = None
+    try:
+        ret = found.invoke(fn, args, kwargs)
+    except Exception as e:
+        err = str(e)
+        print("ERROR INVOKING", component, fn, e)
+
+    calls = []
+
+    return flask.jsonify({
+        "response" : ret,
+        "error" : err,
+        "calls" : calls
+    });
+
+
 @simple_component.route('/<component>/requires')
 def get_requires(component):
-
     requested = flask.request.args.getlist('requires[]')
 
     found = get_component_by_name(component)
@@ -97,14 +125,15 @@ def show(component):
     abort(404)
 
 def add_components():
-    flask.request.components = []
+    flask.request.components = set()
 
-def marshal_components():
+def marshal_components(prelude=True):
     from . import components
     # when lc.__html__ is called, __marshal__ is invoked, so we use lc.render()
     # instead
     lc = components.ComponentLoader()
     lc.context.components = flask.request.components
+    flask.request.components = set()
     html = lc.render()
 
     component_versions = {}
@@ -113,8 +142,13 @@ def marshal_components():
 
     component_versions[lc.get_class()] = lc.get_version()
 
-    return jinja2.Markup(render_template("inject_components.html", html=html,
-        url_for=dated_url_for, versions=json.dumps(component_versions)))
+    postfix = ""
+    if flask.request.components:
+        postfix = marshal_components(prelude=False)
+
+    return jinja2.Markup(render_template("inject_components.html",
+        postfix=postfix, prelude=prelude, html=html, url_for=dated_url_for,
+        versions=json.dumps(component_versions)))
 
 def render_component(name, **kwargs):
     found = get_component_by_name(name)
@@ -156,24 +190,24 @@ def add_cache_header(response):
     response.cache_control.max_age = 300
     return response
 
+@simple_component.before_app_first_request
 @memoize
-def validate_components(app):
+def validate_components():
     valid = 0
     broken = 0
-    with app.app_context():
-        for c in util.inheritors(components.Component):
-            try:
-                pkg = c.test_package()
-                valid += 1
-            except Exception as e:
-                s = "%s Errors:" % (c.__name__)
-                s_ = "-" *  len(s)
-                broken += 1
-                print(s)
-                print(s_)
-                print(e)
+    for c in util.inheritors(components.Component):
+        try:
+            pkg = c.test_package()
+            valid += 1
+        except Exception as e:
+            s = "%s Errors:" % (c.__name__)
+            s_ = "-" *  len(s)
+            broken += 1
+            print(s)
+            print(s_)
+            print(e)
 
-    print("validated %s components, %s broken" % (valid + broken, broken))
+    print("Validated %s components before first request, %s broken" % (valid + broken, broken))
 
 def install(app):
     global APP
@@ -182,5 +216,3 @@ def install(app):
     app.before_request(add_components)
     app.jinja_env.globals.update(marshal_components=marshal_components)
     app.jinja_env.globals.update(CC=render_component)
-
-    validate_components(app)

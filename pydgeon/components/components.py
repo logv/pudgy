@@ -118,6 +118,8 @@ class Component(object):
         self.context = dotmap.DotMap(kwargs)
         self.client = dotmap.DotMap()
 
+        self.__marshalled__ = False
+
         self.__template_name__ = str(self.__class__.__name__)
 
         self.__prep__()
@@ -134,8 +136,8 @@ class Component(object):
         return "cmp_%s" % hashstr[-7:]
 
     def __json__(self):
-        # returns a JSON version of this component
-        return { "_R" : self.__html_id__() }
+        self.__marshal__()
+        return { "_H" : self.__html_id__() }
 
     def __context__(self):
         return json.dumps(self.client.toDict(), default=dump_values)
@@ -148,6 +150,13 @@ class Component(object):
 
         return 0
 
+
+    def __activate_tag__(self):
+        a = self.__activate__()
+        if a:
+            return jinja2.Markup('<script type="text/javascript">\n%s\n</script>' % a)
+
+        return ""
 
     def __activate__(self):
         return ""
@@ -169,7 +178,11 @@ class Component(object):
 
 
     def __marshal__(self):
-        flask.request.components.append(self)
+        if not self.__marshalled__:
+            flask.request.components.add(self)
+            self.__marshalled__ = True
+
+
 
     def __render__(self):
         return ""
@@ -179,13 +192,9 @@ class Component(object):
         return self
 
     def render(self):
-        try:
-            div = self.__render__()
-            wrapped = self.__wrap_div__(div)
-            return wrapped
-        except Exception as e:
-            print(e)
-            raise Exception("NO TEMPLATE TO RENDER", self.__template_name__)
+        div = self.__render__()
+        wrapped = self.__wrap_div__(div)
+        return wrapped
 
 class CoreComponent(Component):
     BASE_DIR = simple_component.root_path + "/core/"
@@ -232,6 +241,10 @@ class SassComponent(Component):
 
 
 class BackboneComponent(JSComponent):
+    def __json__(self):
+        self.__marshal__()
+        return { "_R" : self.__html_id__() }
+
     def __activate__(self):
         t = """
             $C("ComponentLoader", function(m) {
@@ -241,7 +254,7 @@ class BackboneComponent(JSComponent):
         rendered =  pystache.render(t, self)
         return jinja2.Markup(rendered)
 
-class MustacheComponent(JSComponent):
+class MustacheComponent(Component):
     @classmethod
     @memoize
     def get_template(cls):
@@ -253,7 +266,7 @@ class MustacheComponent(JSComponent):
         rendered =  pystache.render(template_str, self.context)
         return self.__wrap_div__(rendered)
 
-class ComponentLoader(CoreComponent, MustacheComponent):
+class ComponentLoader(CoreComponent, MustacheComponent, JSComponent):
     WRAP_COMPONENT = False
 
 # for a Page to be a proper Component, it needs to give an ID to its body
@@ -266,6 +279,72 @@ class Page(Component):
         t = '$("body").attr("id", "%s");' % (self.__html_id__())
         rendered = "%s\n%s" % (t, super(Page, self).__activate__())
         return jinja2.Markup(rendered)
+
+class ClientBridge(BackboneComponent):
+    def __init__(self, *args, **kwargs):
+        super(ClientBridge, self).__init__(*args, **kwargs)
+        self.__calls__ = []
+
+    def call(self, fn, *args, **kwargs):
+        self.__calls__.append((fn, args, kwargs))
+        self.__marshal__()
+
+    def __activate__(self):
+        all = []
+        t = """
+            $C("ComponentLoader", function(m) {
+                m.exports.call_on_backbone_component("{{id}}", "{{ fn }}", {{ &args }}, {{ &kwargs }});
+            });
+        """.strip()
+
+        for c in self.__calls__:
+            fn, args, kwargs = c
+
+            r = pystache.render(t, {
+                "fn" : fn,
+                "args" : json.dumps(args, default=dump_values),
+                "kwargs" : json.dumps(kwargs, default=dump_values),
+                "id" : self.__html_id__()
+            })
+
+            all.append(r)
+
+        rendered = "%s\n%s" % ("\n".join(all), super(ClientBridge, self).__activate__())
+        return jinja2.Markup(rendered)
+
+# A server bridge allows a backbone component to invoke bridge methods on the
+# class that inherits from it
+class ServerBridge(ClientBridge):
+    __remote_calls__ = {}
+
+    @classmethod
+    @memoize
+    def get_js(cls):
+        js = super(ClientBridge, cls).get_js()
+
+        all = ["\n  module.exports.bridge = {}\n"]
+
+
+        t = """
+module.exports.bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn }}");
+            """.strip()
+        for c in cls.__remote_calls__:
+            all.append(pystache.render(t, {
+                "fn" : c,
+                "cls" : cls.__name__
+            }))
+
+        return """%s\n$C("ComponentLoader", function(m) {\n %s \n })""" % (js, "\n".join(all))
+
+    @classmethod
+    def api(cls, fn):
+        cls.__remote_calls__[fn.__name__] = fn
+
+    @classmethod
+    def invoke(cls, fn, args=[], kwargs={}):
+        print("REMOTE INVOKING", cls, fn, args, kwargs)
+        return cls.__remote_calls__[fn](*args, **kwargs)
+
 
 class FlaskPage(Page):
     def render(self):
@@ -283,9 +362,10 @@ def mark_virtual(*cls):
 mark_virtual(
     MustacheComponent,
     JSComponent,
+    ClientBridge,
+    ServerBridge,
     BackboneComponent,
     SassComponent,
     CSSComponent,
     JinjaComponent
 )
-

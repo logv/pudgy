@@ -5,5 +5,6 @@ import jinja2
 # TODO: make the mixins take a first param
 # that validates the existence of that file to reduce dynamism
 from .components import Component, BackboneComponent, MustacheComponent, \
-    SassComponent, CSSComponent, JinjaComponent, Page, FlaskPage
+    SassComponent, CSSComponent, JinjaComponent, Page, FlaskPage, ClientBridge, \
+    ServerBridge
 

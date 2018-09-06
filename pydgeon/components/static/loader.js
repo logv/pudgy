@@ -39,10 +39,10 @@
 
     if (_.keys(needed).length > 0) {
 
-      $.get("/components/" + component + "/requires",
+      $.get($C._url + component + "/requires",
         { requires: _.keys(needed), q: _versions[component] }, function(res, ok) {
         _.each(res, function(v, k) {
-          define(k, raw_import(v, k));
+          define_raw(k, v);
         });
         cb();
       });
@@ -63,7 +63,7 @@
     }
 
     PENDING[componentName] = [cb];
-    $.get("/components/" + componentName, { q: _versions[componentName] }, function(res) {
+    $.get($C._url + componentName, { q: _versions[componentName] }, function(res) {
       load_requires(componentName, res.requires, function() {
         var klass = raw_import(res.js, componentName);
         COMPONENTS[componentName] = res;
@@ -95,14 +95,28 @@
   window.$C = $C;
   var _modules = {};
   var _versions = {};
-  window.define = function(name, mod) {
-    _modules[name] = mod;
+  var _define = {};
+  $C._modules = _modules;
+  $C._versions = _versions;
+  window.define_raw = function(name, mod_code) {
+    _define[name] = mod_code;
   };
 
   window.require = function(mod) {
     debug("GETTING REQUIRE", mod);
+
+    if (!_modules[mod]) {
+      if (_define[mod]) {
+        _modules[mod] = raw_import(_define[mod], mod);
+        _define[mod] = "console.log('Trying to redefine " + mod + " ');";
+      }
+    }
+
+
     return _modules[mod];
   };
 
-  window.activate_component = function(id, name, context, display_immediately) { };
+  window.activate_component = function(id, name, context, display_immediately) {
+    console.log("ACTIVATING COMPONENT", id, name);
+  };
 })();
