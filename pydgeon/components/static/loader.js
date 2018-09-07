@@ -101,6 +101,7 @@
   $C._modules = _modules;
   $C._versions = _versions;
   $C._refs = {};
+  $C._raw_import = raw_import;
   window.define_raw = function(name, mod_code) {
     if (!_defined[name]) {
       _defined[name] = mod_code;

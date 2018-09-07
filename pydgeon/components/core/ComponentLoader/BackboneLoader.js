@@ -30,32 +30,53 @@ module.exports = {
       var args = _.toArray(arguments);
 
       _.defer(function() {
-
         $.ajax($C._url + cls + "/invoke/" + fn,
           {
             type: "POST",
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify({
-              args: args, kwargs: __kwargs__, cid: __id__
+              args: util.place_refs(args), kwargs: util.place_refs(__kwargs__), cid: __id__
             }),
-            success: function(res) {
-              // TODO: this should invoke a cb handed to us, somehow
-              _.each(res.calls, function(c) {
-                var cls = c[0];
-                var cid = c[1];
-                var fn = c[2];
-                var args = c[3];
-                var kwargs = c[4];
+            success: function(R) {
+              _.each(R, function(res, tid) {
+                // 1. replace HTML
+                _.each(res.html, function(obj) {
+                  var fn = obj[0];
+                  var v = obj[1];
+                  var selector = obj[2];
 
-                try {
-                  module.exports.call_on_backbone_component(cid, fn, args, kwargs);
-                } catch(e) {
-                  console.error("ERROR", e, "WHILE RUNNING SERVER DIRECTIVE", cls, cid, fn, args, kwargs);
-                }
+                  var cmp = $C._components[tid];
+
+
+                  if (selector) {
+                    cmp.$el.find(selector)[fn](v);
+                  } else {
+                    cmp.$el[fn](v);
+                  }
+                });
+
+                // 2. activate
+                _.each(res.activations, function(a) {
+                  raw_import(a, _.uniqueId("act_"));
+                });
+                // 3. make call
+                _.each(res.calls, function(c) {
+                  var cls = c[0];
+                  var cid = c[1];
+                  var fn = c[2];
+                  var args = c[3];
+                  var kwargs = c[4];
+
+                  try {
+                    module.exports.call_on_backbone_component(cid, fn, args, kwargs);
+                  } catch(e) {
+                    console.error("ERROR", e, "WHILE RUNNING SERVER DIRECTIVE", cls, cid, fn, args, kwargs);
+                  }
+                });
               });
 
 
-              _.bind(__cb__, that)(res.response, res.error);
+              _.bind(__cb__, that)(R[__id__].response, R[__id__].error);
             }
 
         });
@@ -132,6 +153,7 @@ module.exports = {
         util.replace_refs(context);
 
         var cmpInst = new cmp.backboneClass(context);
+        cmpInst._type = name;
 
         if (cmpInst.__bridge) {
           // TODO: come back to this and fix RPC to not be a proxy?

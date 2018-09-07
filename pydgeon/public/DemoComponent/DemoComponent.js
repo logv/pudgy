@@ -5,5 +5,4 @@ module.exports = {
   handle_click: function() {
     console.log("I WAS CLICKED!");
   }
-
 };

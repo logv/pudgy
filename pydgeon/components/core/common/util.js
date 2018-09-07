@@ -72,6 +72,30 @@ function find_replacement_refs(d, out) {
   return d;
 }
 
+function place_refs(d) {
+  if (_.isElement(d)) {
+    return { "_H" : d.id };
+  }
+
+  if (d instanceof Backbone.View) {
+    return { "_R" : d.id, "_C": d._type };
+  }
+
+  if (_.isObject(d)) {
+    _.each(d, function(v, k) {
+      d[k] = place_refs(v);
+
+    });
+  }
+
+  if (_.isArray(d)) {
+    _.each(d, place_refs);
+  }
+
+  return d;
+
+}
+
 // recursively walk down d and replace references
 // with their actual components
 function replace_refs(d) {
@@ -113,6 +137,7 @@ function replace_refs(d) {
 module.exports = {
   find_replacement_refs: find_replacement_refs,
   replace_refs: replace_refs,
+  place_refs: place_refs,
   inject_css: inject_css,
   wait_for_refs: wait_for_refs,
   cmp_events: cmp_events

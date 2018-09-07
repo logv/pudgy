@@ -1,14 +1,9 @@
-{% if prelude %}
-  <script src="{{ url_for('components.get_prelude') }}" > </script>
-  <script> $C._url = "{{ url_for('components.index') }}"; </script>
-{% endif %}
-
-<script type="text/javascript" name="setversions">
-  $C.set_versions({{ versions | safe }});
-</script>
-
-{% if html %}
-  {{ html | safe }}
-{% endif %}
-
+{%- if prelude -%}
+<script src="{{ url_for('components.get_prelude') }}" > </script>
+<script> $C._url = "{{ url_for('components.index') }}"; </script>
+{%- endif -%}
+<script type="text/javascript" name="setversions"> $C.set_versions({{ versions | safe }}); </script>
+{%- if html -%}
+{{ html | safe }}
+{%- endif -%}
 {{ postfix }}

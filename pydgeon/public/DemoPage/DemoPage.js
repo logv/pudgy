@@ -4,7 +4,8 @@ module.exports = {
   },
   SetComponent: function(cmp) {
     this.rpc
-      .server_call("FOOBAR")
+      .server_call()
+      .kwargs({ component: cmp })
       .done(function(res, error) {
         if (error) {
           console.log("ERR", error);

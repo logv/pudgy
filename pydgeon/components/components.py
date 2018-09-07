@@ -130,6 +130,10 @@ class Component(object):
 
         self.__template_name__ = str(self.__class__.__name__)
 
+        self.__hash__ = "%x" % hash(self)
+
+
+
         self.__prep__()
 
     def __prep__(self):
@@ -139,9 +143,7 @@ class Component(object):
         return "%s: %x" % (self.__template_name__, id(self))
 
     def __html_id__(self):
-        hashstr = "%x" % hash(self)
-
-        return "cmp_%s" % hashstr[-7:]
+        return "cmp_%s" % self.__hash__
 
     def __json__(self):
         self.__marshal__()
@@ -350,20 +352,70 @@ class BigPackage(JSComponent):
 class ComponentLoader(CoreComponent, MustacheComponent, BigPackage):
     WRAP_COMPONENT = False
 
+class HTMLProxy(object):
+    def __init__(self, id):
+        self.id = id
+
 class ComponentProxy(object):
     def __init__(self, cls, id):
-        self.component = cls.__name__
+        if type(cls) == str:
+            self.component = cls
+        elif isinstance(cls, Component) or issubclass(cls, Component):
+            self.component = cls.__name__
+        else:
+            raise Exception("UNKNOWN COMPONENT TO PROXY FOR", cls)
         self.id = id
         self.__calls__ = []
+        self.__transfer__ = []
+        self.__html__ = []
+
+    # jquery is limited to only this component's descendants
+    def run_jquery(self, fn, strval, selector=None):
+        self.__html__.append((fn, strval, selector));
+        return self
+
+    def replace_html(self, val, selector=""):
+        self.run_jquery("html", val, selector)
+
+    def append_html(self, val, selector=""):
+        self.run_jquery("append", val, selector)
+
+    def marshal(self):
+        flask.request.components.add(self)
 
     def call(self, fn, *args, **kwargs):
         self.__calls__.append((fn, args, kwargs))
+        return self
+
+    def transfer(self, *args):
+        self.__transfer__.extend(args)
+        return self
+
+    def get_activations(self):
+        ret = []
+        for t in self.__transfer__:
+            ret.append(t.__activate__())
+
+        self.__transfer__ = []
+        return ret
 
     def get_calls(self):
-
         r = [ [self.component, self.id] + list(c) for c in self.__calls__ ]
         self.__calls__ = []
         return r
+
+    def get_object(self):
+        r = {}
+        r["calls"] = self.get_calls()
+        r["html"] = self.get_html_directives()
+        r["activations"] = self.get_activations()
+        return r
+
+    def get_html_directives(self):
+        ret = self.__html__
+        self.__html__ = []
+        return ret
+
 
 class ClientBridge(BackboneComponent):
     def __init__(self, *args, **kwargs):
@@ -427,9 +479,43 @@ module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn 
         cls.__remote_calls__[fn.__name__] = fn
 
     @classmethod
+    def replace_refs(cls, obj, refs=None):
+        if refs is None:
+            refs = []
+
+        if type(obj) == dict:
+            if "_H" in obj:
+                h = HTMLProxy(obj["_H"])
+                refs.append(h)
+                return h
+
+            elif "_R" in obj and "_C" in obj:
+                c = ComponentProxy(obj["_C"], obj["_R"])
+                refs.append(c)
+                return c
+
+            else:
+                for k in obj:
+                    obj[k] = cls.replace_refs(obj[k], refs)
+
+        if type(obj) == list:
+            return [cls.replace_refs(r, refs) for r in obj]
+
+
+        return obj
+
+
+    @classmethod
     def invoke(cls, cid, fn, args=[], kwargs={}):
         # we instantiate a proxy for our class instance here,
         # like:
+        refs = []
+        args = cls.replace_refs(args, refs)
+        kwargs = cls.replace_refs(kwargs, refs)
+
+        for r in refs:
+            r.marshal()
+
         c = ComponentProxy(cls, cid)
 
         args = [c] + args

@@ -23,8 +23,12 @@ class DemoPage(ServerBridge, FlaskPage):
     pass
 
 @DemoPage.api
-def server_call(cmp, foo):
-    cmp.call("handle_data", data="some_custom_data")
+def server_call(self, component=None):
+    # TODO: validate "foobar" is a valid exported interface
+    if component:
+        component.call("handle_click")
+
+    self.call("handle_data", data="some_custom_data")
     return { "some_data": "HANDLING DATA" }
 
 @app.route("/")

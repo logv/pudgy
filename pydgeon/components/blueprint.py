@@ -7,11 +7,12 @@ import json
 from flask import Blueprint, render_template, abort
 
 simple_component = Blueprint('components', __name__,
-                        template_folder='templates', url_prefix='/components',static_folder='static')
+        template_folder='templates', url_prefix='/components',static_folder='static')
 
 from . import prelude, util, components
 
 import os
+import sys
 
 from .util import memoize
 
@@ -47,16 +48,24 @@ def invoke(component, fn):
     ret = None
 
     res = {}
-
+    r = {}
     try:
         ret, proxy = found.invoke(cid, fn, args, kwargs)
-        res["response"] = ret
-        res["calls"] = proxy.get_calls()
+
+        r.update(proxy.get_object())
+        r["response"] = ret
     except Exception as e:
         err = str(e)
-        res["error"] = err
+        r["error"] = err
         print("ERROR INVOKING", component, fn, e)
+        import traceback
+        traceback.print_exc(file=sys.stdout)
 
+    res[cid] = r
+
+    for p in flask.request.components:
+        if isinstance(p, components.ComponentProxy):
+            res[p.id] = p.get_object()
 
     return flask.jsonify(res)
 
@@ -83,7 +92,6 @@ def show(component):
 
 def add_components():
     flask.request.components = set()
-    flask.request.bridge_calls = []
 
 def marshal_components(prelude=True):
     from . import components
@@ -174,6 +182,10 @@ def validate_components():
 def install(app):
     global APP
     APP = app
+
+    app.jinja_env.trim_blocks = True
+    app.jinja_env.lstrip_blocks = True
+
     app.register_blueprint(simple_component)
     app.before_request(add_components)
     app.jinja_env.globals.update(marshal_components=marshal_components)
