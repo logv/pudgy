@@ -3,30 +3,28 @@ from __future__ import print_function
 import flask
 import os
 
-from .components import Component, FlaskPage, BackboneComponent, MustacheComponent, \
-    SassComponent, ClientBridge, ServerBridge
-
-from .components import install as install_components
-
+import pydgeon
 
 app = flask.Flask(__name__)
-install_components(app)
+pydgeon.register_blueprint(app)
 
 
-# we set the path for our component library to be in public/ in the app's root dir
-Component.set_base_dir(os.path.join(app.root_path, "public"))
+class DemoDir(pydgeon.Component):
+    BASE_DIR = os.path.join(app.root_path, "demo_components")
 
-class DemoComponent(MustacheComponent, SassComponent, BackboneComponent, ClientBridge):
+class DemoComponent(DemoDir, pydgeon.MustacheComponent, pydgeon.SassComponent,
+    pydgeon.BackboneComponent, pydgeon.ClientBridge):
     pass
 
-class DemoPage(ServerBridge, FlaskPage, BackboneComponent):
+class DemoPage(DemoDir, pydgeon.ServerBridge, pydgeon.FlaskPage, 
+    pydgeon.BackboneComponent):
     pass
 
 @DemoPage.api
 def server_call(self, component=None):
-#    if component:
-#        component.replace_html("SERVER AJAX SET")
-    component.call("handle_click", "SERVER AJAX")
+    if component:
+        component.append_html("<br />ADDED FROM SERVER AJAX CALL")
+        component.call("handle_click", "SERVER AJAX")
     self.call("handle_data", data="some_custom_data")
     return { "some_data": "HANDLING DATA" }
 

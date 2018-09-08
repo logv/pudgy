@@ -1,3 +1,6 @@
+import hashlib
+import time
+
 def inheritors(klass):
     subclasses = set()
     work = [klass]
@@ -23,3 +26,12 @@ def memoize(func):
 
     return new_func
 
+def gethash(v):
+    m = hashlib.md5()
+    t = str("%s" % time.time()).encode("utf-8")
+    h = str(hash(v)).encode("utf-8")
+
+    m.update(t)
+    m.update(h)
+
+    return m.hexdigest()

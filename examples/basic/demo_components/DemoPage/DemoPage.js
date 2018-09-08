@@ -3,6 +3,7 @@ module.exports = {
     console.log("LOADED DEMO PAGE", ctx);
   },
   SetComponent: function(cmp) {
+    console.log("SETTING CLIENT COMPONENT", cmp);
     this.rpc
       .server_call()
       .kwargs({ component: cmp })

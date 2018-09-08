@@ -13,7 +13,7 @@ import jinja2
 # FlaskPage: takes template to render as named parameter
 # BigPackage: renders the component as one large package instead of a split
 
-from .components import Component, BackboneComponent, MustacheComponent, \
-    SassComponent, CSSComponent, JinjaComponent, Page, FlaskPage, ClientBridge, \
-    ServerBridge, BigPackage
-
+from .components import Component
+from .basic import BackboneComponent, MustacheComponent, SassComponent, \
+    CSSComponent, JinjaComponent, Page, FlaskPage, BigPackage
+from .bridge import ClientBridge, ServerBridge, ComponentLoader

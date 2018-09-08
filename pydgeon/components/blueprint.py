@@ -9,7 +9,7 @@ from flask import Blueprint, render_template, abort
 simple_component = Blueprint('components', __name__,
         template_folder='templates', url_prefix='/components',static_folder='static')
 
-from . import prelude, util, components
+from . import prelude, util, components, bridge
 
 import os
 import sys
@@ -64,7 +64,7 @@ def invoke(component, fn):
     res[cid] = r
 
     for p in flask.request.components:
-        if isinstance(p, components.Proxy):
+        if isinstance(p, bridge.Proxy):
             res[p.id] = p.get_object()
 
     return flask.jsonify(res)
@@ -97,7 +97,7 @@ def marshal_components(prelude=True):
     from . import components
     # when lc.__html__ is called, __marshal__ is invoked, so we use lc.render()
     # instead
-    lc = components.ComponentLoader()
+    lc = bridge.ComponentLoader()
     lc.context.components = flask.request.components
     flask.request.components = set()
     html = lc.render()
@@ -157,6 +157,10 @@ def add_cache_header(response):
     return response
 
 @simple_component.before_app_first_request
+def install_pydgeon():
+    add_components()
+    install(flask.current_app)
+
 @memoize
 def validate_components():
     from .components import VIRTUAL_COMPONENTS
@@ -186,7 +190,9 @@ def install(app):
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
 
-    app.register_blueprint(simple_component)
     app.before_request(add_components)
     app.jinja_env.globals.update(marshal_components=marshal_components)
     app.jinja_env.globals.update(CC=render_component)
+
+def register_blueprint(app):
+    app.register_blueprint(simple_component)
