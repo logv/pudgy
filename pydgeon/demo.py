@@ -16,18 +16,17 @@ install_components(app)
 # we set the path for our component library to be in public/ in the app's root dir
 Component.set_base_dir(os.path.join(app.root_path, "public"))
 
-class DemoComponent(MustacheComponent, BackboneComponent, SassComponent):
+class DemoComponent(MustacheComponent, SassComponent, BackboneComponent, ClientBridge):
     pass
 
-class DemoPage(ServerBridge, FlaskPage):
+class DemoPage(ServerBridge, FlaskPage, BackboneComponent):
     pass
 
 @DemoPage.api
 def server_call(self, component=None):
-    # TODO: validate "foobar" is a valid exported interface
-    if component:
-        component.call("handle_click")
-
+#    if component:
+#        component.replace_html("SERVER AJAX SET")
+    component.call("handle_click", "SERVER AJAX")
     self.call("handle_data", data="some_custom_data")
     return { "some_data": "HANDLING DATA" }
 
@@ -39,11 +38,13 @@ def hello():
         about="about this component"
     )
 
-
+    component.call("handle_click", "SERVER MAIN REQUEST")
 
     dp = DemoPage(
         template="example.html",
         component=component,
+    ).marshal(
+        foobar="baz"
     )
 
     dp.call("SetComponent", component, filename="foo")

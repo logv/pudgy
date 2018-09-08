@@ -2,8 +2,6 @@ var util = require("common/util");
 
 var LOADED_COMPONENTS = require("common/component_register");
 
-$C._components = LOADED_COMPONENTS;
-
 var rpc_handler = {
   get: function rpc_handler(target, prop) {
     var fn = target.__bridge[prop];
@@ -27,15 +25,20 @@ module.exports = {
 
       var that = this;
       var __id__ = this.id;
+
       var args = _.toArray(arguments);
 
+
       _.defer(function() {
+        var a = util.place_refs(args);
+        var k = util.place_refs(__kwargs__);
+
         $.ajax($C._url + cls + "/invoke/" + fn,
           {
             type: "POST",
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify({
-              args: util.place_refs(args), kwargs: util.place_refs(__kwargs__), cid: __id__
+              args: a, kwargs: k, cid: __id__
             }),
             success: function(R) {
               _.each(R, function(res, tid) {
@@ -45,13 +48,15 @@ module.exports = {
                   var v = obj[1];
                   var selector = obj[2];
 
-                  var cmp = $C._components[tid];
+                  var cmp = LOADED_COMPONENTS[tid];
 
 
+                  var $el;
+                  if (cmp.$el) { $el = cmp.$el; } else { $el = $("#" + tid) } ;
                   if (selector) {
-                    cmp.$el.find(selector)[fn](v);
+                    $el.find(selector)[fn](v);
                   } else {
-                    cmp.$el[fn](v);
+                    $el[fn](v);
                   }
                 });
 
@@ -166,7 +171,6 @@ module.exports = {
 
         LOADED_COMPONENTS[id] = cmpInst;
         if (ref) {
-          console.log("SETTING COMPONENT REF", ref, cmpInst);
           $C._refs[ref] = cmpInst;
         }
 

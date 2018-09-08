@@ -1,6 +1,5 @@
 var LOADED_COMPONENTS = require("common/component_register");
-var cmp_events = {};
-_.extend(cmp_events, Backbone.Events);
+var cmp_events = $C._events;
 
 var _injected_css = {};
 function inject_css(name, css) {
@@ -74,7 +73,8 @@ function find_replacement_refs(d, out) {
 
 function place_refs(d) {
   if (_.isElement(d)) {
-    return { "_H" : d.id };
+    var r= { "_H" : d.id };
+    return r;
   }
 
   if (d instanceof Backbone.View) {
@@ -89,7 +89,7 @@ function place_refs(d) {
   }
 
   if (_.isArray(d)) {
-    _.each(d, place_refs);
+    return _.map(d, place_refs);
   }
 
   return d;
@@ -106,7 +106,6 @@ function replace_refs(d) {
   if (_.isObject(d)) {
     if (d._R) {
       // replace ref
-      debug("REPLACED _R REF", d._R, LOADED_COMPONENTS[d._R]);
       d = LOADED_COMPONENTS[d._R];
     } else if (d._H) {
       var r = d;
@@ -115,6 +114,8 @@ function replace_refs(d) {
         console.log("Can't find HTML element for", r._H,
           "make sure it is placed into the page!");
       }
+
+      d = d[0];
       debug("REPLACED _H REF", r._H, d);
     } else {
       _.each(d, function(v, k) {

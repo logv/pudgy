@@ -64,7 +64,7 @@ def invoke(component, fn):
     res[cid] = r
 
     for p in flask.request.components:
-        if isinstance(p, components.ComponentProxy):
+        if isinstance(p, components.Proxy):
             res[p.id] = p.get_object()
 
     return flask.jsonify(res)

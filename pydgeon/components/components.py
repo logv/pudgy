@@ -124,10 +124,6 @@ class Component(object):
 
     def __init__(self, *args, **kwargs):
         self.context = dotmap.DotMap(kwargs)
-        self.client = dotmap.DotMap()
-
-        self.__marshalled__ = False
-
         self.__template_name__ = str(self.__class__.__name__)
 
         self.__hash__ = "%x" % hash(self)
@@ -160,17 +156,8 @@ class Component(object):
 
         return 0
 
-
-    def __activate_tag__(self):
-        a = self.__activate__()
-        if a:
-            return jinja2.Markup('<script type="text/javascript">\n%s\n</script>' % a)
-
-        return ""
-
-    def __activate__(self):
-        return ""
-
+    def __marshal__(self):
+        return self
 
     def __html__(self):
         self.__marshal__()
@@ -186,20 +173,8 @@ class Component(object):
 
         return "<div id='%s' style='display: none;'>%s</div>" % (self.__html_id__(), div)
 
-
-    def __marshal__(self):
-        if not self.__marshalled__:
-            flask.request.components.add(self)
-            self.__marshalled__ = True
-
-
-
     def __render__(self):
         return ""
-
-    def marshal(self, **kwargs):
-        self.client.update(**kwargs)
-        return self
 
     def render(self):
         div = self.__render__()
@@ -230,16 +205,16 @@ class JSComponent(Component):
 
     @classmethod
     def render_requires(cls, requested):
-        base_dir = cls.BASE_DIR
+        cls_dir = cls.BASE_DIR
         def render_requires_for_js(js, basedir):
             requires = REQUIRE_RE.findall(js)
             ret = {}
             for p in requires:
                 p = p.strip("'\"")
                 if p[0] == ".":
-                    jsp = "%s.js" % os.path.join(base_dir, basedir, p)
+                    jsp = "%s.js" % os.path.join(cls_dir, basedir, p)
                 else:
-                    jsp = "%s.js" % (os.path.join(base_dir, p))
+                    jsp = "%s.js" % (os.path.join(cls_dir, p))
 
                 if os.path.exists(jsp):
                     with open(jsp) as f:
@@ -262,9 +237,9 @@ class JSComponent(Component):
             for p in requires:
                 p = p.strip("'\"")
                 if p[0] == ".":
-                    jsp = "%s.js" % os.path.join(base_dir, basedir, p)
+                    jsp = "%s.js" % os.path.join(cls_dir, basedir, p)
                 else:
-                    jsp = "%s.js" % (os.path.join(base_dir, p))
+                    jsp = "%s.js" % (os.path.join(cls_dir, p))
                 with open(jsp) as f:
                     js = f.read()
                     ret[p] = js
@@ -277,10 +252,49 @@ class JSComponent(Component):
 
         return render_requires(cls, cls.__name__)
 
+    def __init__(self, *args, **kwargs):
+        super(JSComponent, self).__init__(*args, **kwargs)
+
+        self.client = dotmap.DotMap()
+        self.__marshalled__ = False
+
+
+        self.__activate_str__ = ""
+        self.__activations__ = []
+
+    def __add_activation__(self, jscode):
+        self.__activations__.append(jscode)
+
+    def __activate_tag__(self):
+        self.__activate__()
+
+        a = self.__get_activate_script__()
+        if a:
+            return jinja2.Markup('<script type="text/javascript">\n%s\n</script>' % a)
+
+        return ""
+
+    def __get_activate_script__(self):
+        all = [self.__activate_str__]
+        all.extend(self.__activations__)
+
+        return "\n".join(all)
+
+    # override this function to provide a custom activation
     def __activate__(self):
         t = """activate_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }} )"""
         rendered =  pystache.render(t, self)
-        return jinja2.Markup(rendered)
+        self.__activate_str__ = t
+
+    def __marshal__(self):
+        if not self.__marshalled__:
+            flask.request.components.add(self)
+            self.__marshalled__ = True
+
+    def marshal(self, **kwargs):
+        self.client.update(**kwargs)
+        self.__marshal__()
+        return self
 
 class CSSComponent(Component):
     @classmethod
@@ -310,13 +324,16 @@ class BackboneComponent(JSComponent):
         return self
 
     def __activate__(self):
+        super(BackboneComponent, self).__activate__()
+
+        # we override the activation string with our backbone activation string
         t = """
             $C("ComponentLoader", function(m) {
                 m.exports.activate_backbone_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }}, "{{ __ref__ }}" )
             });
         """.strip()
-        rendered =  pystache.render(t, self)
-        return jinja2.Markup(rendered)
+
+        self.__activate_str__ = pystache.render(t, self)
 
 class MustacheComponent(Component):
     @classmethod
@@ -328,7 +345,7 @@ class MustacheComponent(Component):
     def __render__(self):
         template_str = self.get_template()
         rendered =  pystache.render(template_str, self.context)
-        return self.__wrap_div__(rendered)
+        return rendered
 
 # for a Page to be a proper Component, it needs to give an ID to its body
 class Page(Component):
@@ -337,9 +354,10 @@ class Page(Component):
         self.__marshal__()
 
     def __activate__(self):
+        super(Page, self).__activate__()
+
         t = '$("body").attr("id", "%s");' % (self.__html_id__())
-        rendered = "%s\n%s" % (t, super(Page, self).__activate__())
-        return jinja2.Markup(rendered)
+        self.__add_activation__(t)
 
 # A Big Package will automatically include its requires into a
 # package definition
@@ -352,22 +370,15 @@ class BigPackage(JSComponent):
 class ComponentLoader(CoreComponent, MustacheComponent, BigPackage):
     WRAP_COMPONENT = False
 
-class HTMLProxy(object):
-    def __init__(self, id):
-        self.id = id
+class Proxy(object):
+    def __init__(self, *args, **kwargs):
+        pass
 
-class ComponentProxy(object):
-    def __init__(self, cls, id):
-        if type(cls) == str:
-            self.component = cls
-        elif isinstance(cls, Component) or issubclass(cls, Component):
-            self.component = cls.__name__
-        else:
-            raise Exception("UNKNOWN COMPONENT TO PROXY FOR", cls)
+class HTMLProxy(Proxy):
+    def __init__(self, id, *args, **kwargs):
         self.id = id
-        self.__calls__ = []
-        self.__transfer__ = []
         self.__html__ = []
+        super(HTMLProxy, self).__init__(*args, **kwargs)
 
     # jquery is limited to only this component's descendants
     def run_jquery(self, fn, strval, selector=None):
@@ -383,6 +394,37 @@ class ComponentProxy(object):
     def marshal(self):
         flask.request.components.add(self)
 
+    def get_object(self):
+        r = {}
+        r["html"] = self.get_html_directives()
+        return r
+
+    def get_html_directives(self):
+        ret = self.__html__
+        self.__html__ = []
+        return ret
+
+
+
+class ComponentProxy(HTMLProxy):
+    def __init__(self, id, cls, *args, **kwargs):
+        super(ComponentProxy, self).__init__(id, cls, *args, **kwargs)
+
+        self.id = id
+
+        if type(cls) == str:
+            self.component = cls
+        elif isinstance(cls, Component) or issubclass(cls, Component):
+            self.component = cls.__name__
+        else:
+            raise Exception("UNKNOWN COMPONENT TO PROXY FOR", cls)
+
+        self.__calls__ = []
+        self.__transfer__ = []
+
+    def marshal(self):
+        flask.request.components.add(self)
+
     def call(self, fn, *args, **kwargs):
         self.__calls__.append((fn, args, kwargs))
         return self
@@ -394,7 +436,7 @@ class ComponentProxy(object):
     def get_activations(self):
         ret = []
         for t in self.__transfer__:
-            ret.append(t.__activate__())
+            ret.append(t.__get_activate_script__())
 
         self.__transfer__ = []
         return ret
@@ -417,7 +459,7 @@ class ComponentProxy(object):
         return ret
 
 
-class ClientBridge(BackboneComponent):
+class ClientBridge(JSComponent):
     def __init__(self, *args, **kwargs):
         super(ClientBridge, self).__init__(*args, **kwargs)
         self.__calls__ = []
@@ -427,6 +469,9 @@ class ClientBridge(BackboneComponent):
         self.__marshal__()
 
     def __activate__(self):
+        super(ClientBridge, self).__activate__()
+
+
         all = []
         t = """
             $C("ComponentLoader", function(m) {
@@ -437,6 +482,7 @@ class ClientBridge(BackboneComponent):
         for c in self.__calls__:
             fn, args, kwargs = c
 
+
             r = pystache.render(t, {
                 "fn" : fn,
                 "args" : json.dumps(args, default=dump_values),
@@ -444,10 +490,7 @@ class ClientBridge(BackboneComponent):
                 "id" : self.__html_id__()
             })
 
-            all.append(r)
-
-        rendered = "%s\n%s" % ("\n".join(all), super(ClientBridge, self).__activate__())
-        return jinja2.Markup(rendered)
+            self.__add_activation__(r)
 
 # A server bridge allows a backbone component to invoke bridge methods on the
 # class that inherits from it
@@ -490,7 +533,7 @@ module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn 
                 return h
 
             elif "_R" in obj and "_C" in obj:
-                c = ComponentProxy(obj["_C"], obj["_R"])
+                c = ComponentProxy(obj["_R"], obj["_C"])
                 refs.append(c)
                 return c
 
@@ -516,7 +559,7 @@ module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn 
         for r in refs:
             r.marshal()
 
-        c = ComponentProxy(cls, cid)
+        c = ComponentProxy(cid, cls)
 
         args = [c] + args
 
