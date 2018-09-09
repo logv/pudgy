@@ -9,7 +9,9 @@ from flask import Blueprint, render_template, abort
 simple_component = Blueprint('components', __name__,
         template_folder='templates', url_prefix='/components',static_folder='static')
 
-from . import prelude, util, components, bridge
+from . import prelude, util, components
+
+components.set_base_dir(simple_component.root_path)
 
 import os
 import sys
@@ -64,7 +66,7 @@ def invoke(component, fn):
     res[cid] = r
 
     for p in flask.request.components:
-        if isinstance(p, bridge.Proxy):
+        if isinstance(p, components.bridge.Proxy):
             res[p.id] = p.get_object()
 
     return flask.jsonify(res)
@@ -97,7 +99,7 @@ def marshal_components(prelude=True):
     from . import components
     # when lc.__html__ is called, __marshal__ is invoked, so we use lc.render()
     # instead
-    lc = bridge.ComponentLoader()
+    lc = components.bridge.ComponentLoader()
     lc.context.components = flask.request.components
     flask.request.components = set()
     html = lc.render()
@@ -158,34 +160,19 @@ def add_cache_header(response):
 
 @simple_component.before_app_first_request
 def install_pydgeon():
-    add_components()
+    components.validate_components()
+
+
     install(flask.current_app)
 
-@memoize
-def validate_components():
-    from .components import VIRTUAL_COMPONENTS
-
-    valid = 0
-    broken = []
-    for c in util.inheritors(components.Component):
-        try:
-            pkg = c.test_package()
-            valid += 1
-        except Exception as e:
-            s = "%s Errors:" % (c.__name__)
-            s_ = "-" *  len(s)
-            broken.append(c.__name__)
-            print(s)
-            print(s_)
-            print(e)
-
-    print("Validated %s components before first request, %s broken" % (valid + len(broken) - len(VIRTUAL_COMPONENTS), len(broken)))
-    if broken:
-        print("Broken:", ",".join(broken))
+    # because our first before_request handler never runs, we invoke it
+    # manually
+    add_components()
 
 def install(app):
     global APP
     APP = app
+
 
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True

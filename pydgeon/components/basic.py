@@ -204,5 +204,6 @@ mark_virtual(
     SassComponent,
     CSSComponent,
     JinjaComponent,
+    Page,
     BigPackage
 )

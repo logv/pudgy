@@ -1,4 +1,5 @@
 from . import components
+from .blueprint import simple_component
 
 import os
 
@@ -11,7 +12,7 @@ PRELUDE = [
 ]
 
 def make_prelude():
-    static_folder = components.simple_component.static_folder
+    static_folder = simple_component.static_folder
     out = []
 
     for p in PRELUDE:

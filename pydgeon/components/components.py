@@ -12,12 +12,10 @@ import re
 import hashlib
 
 
-from .blueprint import simple_component
-
 REQUIRE_RE = re.compile("""require\(['"](.*)['"]\)""")
 VIRTUAL_COMPONENTS = set()
 
-from .util import memoize, gethash
+from ..util import memoize, gethash, inheritors
 
 def dump_values(w):
     if w:
@@ -27,7 +25,7 @@ def dump_values(w):
 
 class Component(object):
     WRAP_COMPONENT = True
-    BASE_DIR = simple_component.root_path + "/public/"
+    BASE_DIR = None
 
     @classmethod
     def set_base_dir(cls, base_dir):
@@ -124,9 +122,9 @@ class Component(object):
 
 
 
-        self.__prep__()
+        self.__prepare__()
 
-    def __prep__(self):
+    def __prepare__(self):
         pass
 
     def __repr__(self):
@@ -176,7 +174,37 @@ class Component(object):
         return wrapped
 
 class CoreComponent(Component):
-    BASE_DIR = simple_component.root_path + "/core/"
+    pass
+
+def set_base_dir(d):
+    Component.set_base_dir(os.path.join(d, "components"))
+    CoreComponent.set_base_dir(os.path.join(d, "core"))
+
+@memoize
+def validate_components():
+    valid = 0
+    broken = []
+    virtual_components = []
+    for c in inheritors(Component):
+        if c.__name__ in VIRTUAL_COMPONENTS:
+            virtual_components.append(c)
+
+        try:
+            pkg = c.test_package()
+            if not c.__name__ in VIRTUAL_COMPONENTS:
+                valid += 1
+        except Exception as e:
+            s = "%s Errors:" % (c.__name__)
+            s_ = "-" *  len(s)
+            broken.append(c.__name__)
+            print(s)
+            print(s_)
+            print(e)
+
+    print("Validated %s components before first request, %s broken" % (valid + len(broken), len(broken)))
+    if broken:
+        print("Broken:", ",".join(broken))
+
 
 def mark_virtual(*cls):
     for c in cls:
