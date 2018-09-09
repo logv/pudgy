@@ -2,7 +2,7 @@
 
 #### server startup
 
-when the pydgeon blueprint initializes, it reads all classes that inherit from
+when the pudgy blueprint initializes, it reads all classes that inherit from
 Component and verifies that their packages can be built.
 
 #### during a request

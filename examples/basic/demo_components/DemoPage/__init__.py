@@ -1,8 +1,8 @@
-import pydgeon
+import pudgy
 from ..demo_base import DemoDir
 
-class DemoPage(DemoDir, pydgeon.ServerBridge, pydgeon.FlaskPage,
-    pydgeon.BackboneComponent):
+class DemoPage(DemoDir, pudgy.ServerBridge, pudgy.FlaskPage,
+    pudgy.BackboneComponent):
     pass
 
 @DemoPage.api

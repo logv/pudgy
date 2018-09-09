@@ -1,7 +1,7 @@
-import pydgeon
+import pudgy
 from ..demo_base import DemoDir
 
-class DemoComponent(DemoDir, pydgeon.MustacheComponent, pydgeon.SassComponent,
-    pydgeon.BackboneComponent, pydgeon.ClientBridge):
+class DemoComponent(DemoDir, pudgy.MustacheComponent, pudgy.SassComponent,
+    pudgy.BackboneComponent, pudgy.ClientBridge):
     pass
 

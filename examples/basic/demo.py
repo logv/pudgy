@@ -3,10 +3,10 @@ from __future__ import print_function
 import flask
 import os
 
-import pydgeon
+import pudgy
 
 app = flask.Flask(__name__)
-pydgeon.register_blueprint(app)
+pudgy.register_blueprint(app)
 
 from .demo_components import DemoPage, DemoComponent
 

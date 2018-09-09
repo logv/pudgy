@@ -159,7 +159,7 @@ def add_cache_header(response):
     return response
 
 @simple_component.before_app_first_request
-def install_pydgeon():
+def install_pudgy():
     components.validate_components()
 
 

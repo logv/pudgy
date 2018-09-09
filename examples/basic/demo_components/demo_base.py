@@ -1,6 +1,6 @@
 import os
-import pydgeon
+import pudgy
 
-class DemoDir(pydgeon.Component):
+class DemoDir(pudgy.Component):
     BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
