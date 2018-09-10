@@ -73,7 +73,7 @@ class ReactComponent(bridge.ClientBridge):
 
         super(ReactComponent, self).__activate__()
 
-        # we override the activation string with our backbone activation string
+        # we override the activation string with our react activation string
         t = """
             $C("ReactLoader", function(m) {
                 m.exports.activate_react_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }}, "{{ __ref__ }}" )

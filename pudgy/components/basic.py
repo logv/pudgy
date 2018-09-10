@@ -157,10 +157,11 @@ class BackboneComponent(JSComponent):
 
     def __activate__(self):
         super(BackboneComponent, self).__activate__()
+        # TODO: BackboneLoader should be referenced via intermediate Class
 
         # we override the activation string with our backbone activation string
         t = """
-            $C("ComponentLoader", function(m) {
+            $C("BackboneLoader", function(m) {
                 m.exports.activate_backbone_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }}, "{{ __ref__ }}" )
             });
         """.strip()

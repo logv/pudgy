@@ -99,7 +99,7 @@ def marshal_components(prelude=True):
     from . import components
     # when lc.__html__ is called, __marshal__ is invoked, so we use lc.render()
     # instead
-    lc = components.bridge.ComponentLoader()
+    lc = components.bridge.ComponentBridge()
     lc.context.components = flask.request.components
     flask.request.components = set()
     html = lc.render()

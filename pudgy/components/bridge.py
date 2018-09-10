@@ -3,7 +3,10 @@ from .components import *
 from .proxy import Proxy, ComponentProxy, HTMLProxy
 from .basic import MustacheComponent, BigPackage, JSComponent, BackboneComponent
 
-class ComponentLoader(CoreComponent, MustacheComponent, BigPackage):
+class ComponentBridge(CoreComponent, MustacheComponent, BigPackage):
+    WRAP_COMPONENT = False
+
+class BackboneLoader(CoreComponent, BigPackage):
     WRAP_COMPONENT = False
 
 class ReactLoader(CoreComponent, BigPackage):
@@ -14,8 +17,8 @@ class ClientBridge(JSComponent):
         self.__marshal__()
 
         t = """
-            $C("ComponentLoader", function(m) {
-                m.exports.call_on_backbone_component("{{id}}", "{{ fn }}", {{ &args }}, {{ &kwargs }});
+            $C("ComponentBridge", function(m) {
+                m.exports.call_on_component("{{id}}", "{{ fn }}", {{ &args }}, {{ &kwargs }});
             });
         """.strip()
 
@@ -51,7 +54,7 @@ module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn 
                 "cls" : cls.__name__
             }))
 
-        return """%s\n$C("ComponentLoader", function(m) {\n %s \n })""" % (js, "\n".join(all))
+        return """%s\n$C("ComponentBridge", function(m) {\n %s \n })""" % (js, "\n".join(all))
 
     @classmethod
     def api(cls, fn):
@@ -109,7 +112,7 @@ module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn 
 mark_virtual(
     ClientBridge,
     ServerBridge,
-    ComponentLoader,
+    ComponentBridge,
     Proxy,
     HTMLProxy
 )

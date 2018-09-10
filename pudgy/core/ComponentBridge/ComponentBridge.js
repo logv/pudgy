@@ -1,9 +1,12 @@
+var debug = require("common/debug").make();
 var util = require("common/util");
+debug.DEBUG = false;
 
 var LOADED_COMPONENTS = require("common/component_register");
 
 module.exports = {
   add_invocation: function(cls, fn, args, kwargs) {
+
     var __kwargs__ = {};
     var __cb__ = function() {};
     var __err__ = function(err) {
@@ -62,7 +65,7 @@ module.exports = {
                   var kwargs = c[4];
 
                   try {
-                    module.exports.call_on_backbone_component(cid, fn, args, kwargs);
+                    util.call_on_component(cid, fn, args, kwargs);
                   } catch(e) {
                     console.error("ERROR", e, "WHILE RUNNING SERVER DIRECTIVE", cls, cid, fn, args, kwargs);
                   }
@@ -93,23 +96,8 @@ module.exports = {
 
     return retfn;
   },
-  call_on_backbone_component: function(id, fn, args, kwargs) {
+  call_on_component: function(id, fn, args, kwargs) {
     util.call_on_component(id, fn, args, kwargs);
   },
-  activate_backbone_component:  function activate_backbone_component(id, name, context, display_immediately, ref) {
-    debug("ACTIVATING COMPONENT", id, name);
-    context.id = id;
 
-    $C(name, function(cls) {
-      if (!cls.backboneClass) {
-        util.inject_css("scoped_" + name, cls.css);
-        cls.backboneClass = Backbone.View.extend(cls.exports);
-      }
-
-      util.activate_component(id, name, cls, context, ref, function(ctx) {
-        return new cls.backboneClass(ctx);
-
-      });
-    });
-  }
 };
