@@ -2,3 +2,4 @@ flask
 pystache
 libsass
 dotmap
+klepto

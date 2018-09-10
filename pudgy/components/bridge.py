@@ -6,6 +6,9 @@ from .basic import MustacheComponent, BigPackage, JSComponent, BackboneComponent
 class ComponentLoader(CoreComponent, MustacheComponent, BigPackage):
     WRAP_COMPONENT = False
 
+class ReactLoader(CoreComponent, BigPackage):
+    WRAP_COMPONENT = False
+
 class ClientBridge(JSComponent):
     def call(self, fn, *args, **kwargs):
         self.__marshal__()
@@ -67,6 +70,10 @@ module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn 
 
             elif "_R" in obj and "_C" in obj:
                 c = ComponentProxy(obj["_R"], obj["_C"])
+                refs.append(c)
+                return c
+            elif "_B" in obj and "_C" in obj:
+                c = ComponentProxy(obj["_B"], obj["_C"])
                 refs.append(c)
                 return c
 

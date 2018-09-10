@@ -1,3 +1,6 @@
+react_example:
+				find ./pudgy/ -name "*.html" -o -name "*.jsx" -o -name "*.py" -o -name "*.sass" -o -name "*.mustache" | entr -r python -m examples.react.demo
+
 basic_example:
 				find ./pudgy/ -name "*.html" -o -name "*.js" -o -name "*.py" -o -name "*.sass" -o -name "*.mustache" | entr -r python -m examples.basic.demo
 

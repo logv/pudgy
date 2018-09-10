@@ -12,6 +12,31 @@ def inheritors(klass):
                 work.append(child)
     return subclasses
 
+# from https://stackoverflow.com/questions/16463582/memoize-to-disk-python-persistent-memoization
+# https://stackoverflow.com/posts/47385932/revisions
+from klepto.archives import *
+def shelve_it(file_name):
+    d = file_archive(file_name)
+    d.load()
+
+    def decorator(func):
+        def new_func(*args, **kwargs):
+            cache_key = "\r".join([str(arg) for arg in args])
+
+            if cache_key in d:
+                return d[cache_key]
+
+
+            ret = func(*args, **kwargs)
+            d[cache_key] = ret
+            d.dump()
+
+            return ret
+
+        return new_func
+
+    return decorator
+
 def memoize(func):
     cache = {}
     def new_func(*args, **kwargs):

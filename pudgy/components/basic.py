@@ -1,4 +1,5 @@
 from .components import *
+from . import proxy
 
 import flask
 import dotmap
@@ -20,28 +21,43 @@ class JSComponent(Component):
     @memoize
     def get_js(cls):
         with open(cls.get_file_for_ext("js")) as f:
-            return f.read()
+            return cls.js_transform(f.read())
+
+    @classmethod
+    def js_transform(cls, js):
+        return js
+
+    @classmethod
+    def find_file(cls, fname, basedir):
+        cls_dir = cls.BASE_DIR
+
+        fname = fname.strip("'\"")
+        if fname[0] == ".":
+            jsp = "%s.js" % os.path.join(cls_dir, basedir, fname)
+        else:
+            jsp = "%s.js" % (os.path.join(cls_dir, fname))
+
+        return jsp
 
     @classmethod
     def render_requires(cls, requested):
         cls_dir = cls.BASE_DIR
+        from .components import REQUIRE_RE
         def render_requires_for_js(js, basedir):
             requires = REQUIRE_RE.findall(js)
             ret = {}
             for p in requires:
                 p = p.strip("'\"")
-                if p[0] == ".":
-                    jsp = "%s.js" % os.path.join(cls_dir, basedir, p)
-                else:
-                    jsp = "%s.js" % (os.path.join(cls_dir, p))
+                jsp = cls.find_file(p, basedir)
 
                 if os.path.exists(jsp):
                     with open(jsp) as f:
                         js = f.read()
+                        js = cls.js_transform(js)
                         ret[p] = js
                 else:
-                    print("MISSING REQUIRE FILE", jsp, component)
-                    ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, component)
+                    print("MISSING REQUIRE FILE", jsp, cls.__name__)
+                    ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, cls.__name__)
                     continue
 
                 ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
@@ -54,16 +70,13 @@ class JSComponent(Component):
             requires = set(component.get_requires()).intersection(set(requested))
 
             for p in requires:
-                p = p.strip("'\"")
-                if p[0] == ".":
-                    jsp = "%s.js" % os.path.join(cls_dir, basedir, p)
-                else:
-                    jsp = "%s.js" % (os.path.join(cls_dir, p))
-                with open(jsp) as f:
-                    js = f.read()
-                    ret[p] = js
+                jsp = cls.find_file(p, basedir)
+                if jsp:
+                    with open(jsp, "r") as f:
+                        js = cls.js_transform(f.read())
+                        ret[p] = js
 
-                ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
+                    ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
 
 
 
@@ -72,9 +85,9 @@ class JSComponent(Component):
         return render_requires(cls, cls.__name__)
 
     def __init__(self, *args, **kwargs):
+        self.client = dotmap.DotMap()
         super(JSComponent, self).__init__(*args, **kwargs)
 
-        self.client = dotmap.DotMap()
         self.__marshalled__ = False
 
 
@@ -135,7 +148,7 @@ class SassComponent(Component):
 class BackboneComponent(JSComponent):
     def __json__(self):
         self.__marshal__()
-        return { "_R" : self.__html_id__() }
+        return { "_B" : self.__html_id__() }
 
     def set_ref(self, name):
         # TODO: validate there is only one of each named ref on the page
@@ -205,5 +218,5 @@ mark_virtual(
     CSSComponent,
     JinjaComponent,
     Page,
-    BigPackage
+    BigPackage,
 )

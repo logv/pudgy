@@ -2,17 +2,6 @@ var util = require("common/util");
 
 var LOADED_COMPONENTS = require("common/component_register");
 
-var rpc_handler = {
-  get: function rpc_handler(target, prop) {
-    var fn = target.__bridge[prop];
-    if (!fn) {
-      throw prop + "is not an RPC function on " +  target.id;
-    }
-
-    return _.bind(fn, target);
-  }
-}
-
 module.exports = {
   add_invocation: function(cls, fn, args, kwargs) {
     var __kwargs__ = {};
@@ -105,81 +94,21 @@ module.exports = {
     return retfn;
   },
   call_on_backbone_component: function(id, fn, args, kwargs) {
-    var refs = { };
-
-    refs[id] = id;
-    util.find_replacement_refs(args, refs);
-    util.find_replacement_refs(kwargs, refs);
-
-    util.wait_for_refs(refs, function() {
-      util.replace_refs(args);
-      util.replace_refs(kwargs);
-      var cmp = LOADED_COMPONENTS[id];
-      if (_.isFunction(cmp[fn])) {
-        var oldkw = cmp[fn].__kwargs__;
-        var oldargs = cmp[fn].__args__;
-
-        cmp[fn].__kwargs__ = kwargs;
-        cmp[fn].__args__ = args;
-        try {
-          cmp[fn].apply(cmp, args);
-        } finally {
-          cmp[fn].__kwargs__ = oldkw;
-          cmp[fn].__args__ = oldargs;
-        }
-
-      } else {
-        console.error("NO SUCH FUNCTION", fn, "IN COMPONENT", id);
-      }
-    });
-
+    util.call_on_component(id, fn, args, kwargs);
   },
   activate_backbone_component:  function activate_backbone_component(id, name, context, display_immediately, ref) {
     debug("ACTIVATING COMPONENT", id, name);
     context.id = id;
 
-    var cmpEl = document.getElementById(id);
-    $C(name, function(cmp) {
-      debug("LOADED COMPONENT PACKAGE", id, name);
-
-      if (!cmp.backboneClass) {
-        util.inject_css("scoped_" + name, cmp.css);
-
-        cmp.backboneClass = Backbone.View.extend(cmp.exports);
+    $C(name, function(cls) {
+      if (!cls.backboneClass) {
+        util.inject_css("scoped_" + name, cls.css);
+        cls.backboneClass = Backbone.View.extend(cls.exports);
       }
 
-      context.id = id;
-      context.el = cmpEl;
-      $(context.el).addClass("scoped_" + name);
+      util.activate_component(id, name, cls, context, ref, function(ctx) {
+        return new cls.backboneClass(ctx);
 
-      var refs = {};
-      util.find_replacement_refs(context, refs);
-      util.wait_for_refs(refs, function() {
-        util.replace_refs(context);
-
-        var cmpInst = new cmp.backboneClass(context);
-        cmpInst._type = name;
-
-        if (cmpInst.__bridge) {
-          // TODO: come back to this and fix RPC to not be a proxy?
-          cmpInst.rpc = new Proxy(cmpInst.__bridge, {
-            get: function(target, prop) {
-              return rpc_handler.get(cmpInst, prop)
-            }
-          });
-        }
-
-        LOADED_COMPONENTS[id] = cmpInst;
-        if (ref) {
-          $C._refs[ref] = cmpInst;
-        }
-
-        debug("INSTANTIATED COMPONENT", id, name, cmpInst);
-        util.inject_css("display_" + id, "\n#" + id + " { display: block !important } \n");
-        util.cmp_events.trigger("cmp::" + id);
-        if (ref) {
-          util.cmp_events.trigger("ref::" + ref);
-        }
       });
     });
   }

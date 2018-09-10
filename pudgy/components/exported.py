@@ -17,3 +17,5 @@ from .components import Component, set_base_dir, validate_components
 from .basic import BackboneComponent, MustacheComponent, SassComponent, \
     CSSComponent, JinjaComponent, Page, FlaskPage, BigPackage
 from .bridge import ClientBridge, ServerBridge, ComponentLoader
+from .react import ReactComponent
+

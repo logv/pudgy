@@ -5,7 +5,7 @@ module.exports = {
         return
       }
 
-      console.log(_.toArray(arguments).join(" "));
+      console.log(...arguments);
     }
     debug.DEBUG = false;
 

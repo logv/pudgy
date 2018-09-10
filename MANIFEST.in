@@ -1,0 +1,3 @@
+recursive-include pudgy/static/ *.js
+recursive-include pudgy/templates/ *.html
+recursive-include pudgy/core/ *.*

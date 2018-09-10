@@ -12,7 +12,7 @@ import re
 import hashlib
 
 
-REQUIRE_RE = re.compile("""require\(['"](.*)['"]\)""")
+REQUIRE_RE = re.compile("""require\(['"](.*?)['"]\)""")
 VIRTUAL_COMPONENTS = set()
 
 from ..util import memoize, gethash, inheritors
