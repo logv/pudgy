@@ -145,29 +145,6 @@ class SassComponent(Component):
             return sass.compile(string=".scoped_%s {\n %s\n}" % (cls.__name__, data))
 
 
-class BackboneComponent(JSComponent):
-    def __json__(self):
-        self.__marshal__()
-        return { "_B" : self.__html_id__() }
-
-    def set_ref(self, name):
-        # TODO: validate there is only one of each named ref on the page
-        self.__ref__ = name
-        return self
-
-    def __activate__(self):
-        super(BackboneComponent, self).__activate__()
-        # TODO: BackboneLoader should be referenced via intermediate Class
-
-        # we override the activation string with our backbone activation string
-        t = """
-            $C("BackboneLoader", function(m) {
-                m.exports.activate_backbone_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }}, "{{ __ref__ }}" )
-            });
-        """.strip()
-
-        self.__activate_str__ = pystache.render(t, self)
-
 class MustacheComponent(Component):
     @classmethod
     @memoize
@@ -180,28 +157,6 @@ class MustacheComponent(Component):
         rendered =  pystache.render(template_str, self.context)
         return rendered
 
-# for a Page to be a proper Component, it needs to give an ID to its body
-class Page(Component):
-    def __init__(self, *args, **kwargs):
-        super(Page, self).__init__(*args, **kwargs)
-        self.__marshal__()
-
-    # TODO: not sure I like having to call super() in activations.
-    # they should be different functions, perhaps
-    def __activate__(self):
-        super(Page, self).__activate__()
-
-        t = '$("body").attr("id", "%s");' % (self.__html_id__())
-        self.__add_activation__(t)
-
-class FlaskPage(Page):
-    def render(self):
-        kwargs = self.context.toDict()
-        r = flask.render_template(self.context.template, **kwargs)
-        # notice that we don't call __wrap_div__ on r
-        return r
-
-
 # A Big Package will automatically include its requires into a
 # package definition
 class BigPackage(JSComponent):
@@ -213,11 +168,8 @@ class BigPackage(JSComponent):
 mark_virtual(
     MustacheComponent,
     JSComponent,
-    BackboneComponent,
-    FlaskPage,
     SassComponent,
     CSSComponent,
     JinjaComponent,
-    Page,
     BigPackage,
 )

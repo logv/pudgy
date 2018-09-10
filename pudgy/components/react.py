@@ -5,6 +5,9 @@ import os
 
 from ..util import memoize, shelve_it
 
+from .components import CoreComponent
+from .assets import BigPackage
+
 import shlex
 import subprocess
 
@@ -26,6 +29,9 @@ def jsx_compile(data, fname='???'):
     stdout,stderr = p.communicate(data.encode())
 
     return stdout.decode()
+
+class ReactLoader(CoreComponent, BigPackage):
+    WRAP_COMPONENT = False
 
 class ReactComponent(bridge.ClientBridge):
     @classmethod
@@ -83,4 +89,4 @@ class ReactComponent(bridge.ClientBridge):
         self.__activate_str__ = pystache.render(t, self)
 
 from . import components
-components.mark_virtual(ReactComponent)
+components.mark_virtual(ReactComponent, ReactLoader)

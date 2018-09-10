@@ -1,15 +1,9 @@
 from .components import *
 
 from .proxy import Proxy, ComponentProxy, HTMLProxy
-from .basic import MustacheComponent, BigPackage, JSComponent, BackboneComponent
+from .assets import MustacheComponent, BigPackage, JSComponent
 
 class ComponentBridge(CoreComponent, MustacheComponent, BigPackage):
-    WRAP_COMPONENT = False
-
-class BackboneLoader(CoreComponent, BigPackage):
-    WRAP_COMPONENT = False
-
-class ReactLoader(CoreComponent, BigPackage):
     WRAP_COMPONENT = False
 
 class ClientBridge(JSComponent):

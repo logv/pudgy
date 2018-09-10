@@ -1,3 +1,9 @@
 *.pyc
 .*.sw?
 *.bak
+build
+dist
+py3/
+pypy/
+dev/
+*.egg-info
