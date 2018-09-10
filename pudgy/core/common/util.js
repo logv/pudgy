@@ -70,6 +70,7 @@ function find_replacement_refs(d, out) {
   }
 
   if (_.isObject(d)) {
+    // TODO: hmmm... these _tails need to be registered somewhere
     if (d._B) {
       out[d._B] = d._B;
     } else if (d._R) {
@@ -87,21 +88,91 @@ function find_replacement_refs(d, out) {
   return d;
 }
 
+var _marshallers = {};
+var _unmarshallers = {};
+function register_marshaller(name, fn) {
+  _marshallers[name] = fn;
+}
+
+function register_unmarshaller(name, fn) {
+  _unmarshallers[name] = fn;
+}
+
+register_marshaller('HTMLElement', function(d) {
+  if (_.isElement(d)) { return { "_H" : d.id }; }
+});
+
+register_marshaller('Backbone', function(d) {
+  if (d instanceof Backbone.View) { return { "_B" : d.id, "_C": d._type }; }
+});
+
+register_marshaller('React', function(d) {
+  if (d._type) { return { "_R" : d.id, "_C" : d._type }; }
+});
+
+register_unmarshaller('HTMLElement', function(d) {
+  if (d._H) {
+    var r = d;
+    d = $("#" + r._H);
+    if (!d.length) {
+      console.log("Can't find HTML element for", r._H,
+        "make sure it is placed into the page!");
+    }
+
+    d = d[0];
+    debug("REPLACED _H REF", r._H, d);
+
+    return d;
+  }
+});
+
+var MISSING_COMPONENT = "COMPONENT_MISSING";
+register_unmarshaller('Backbone', function(d) {
+  if (d._B) {
+    return LOADED_COMPONENTS[d._B] || MISSING_COMPONENT;
+  }
+});
+
+register_unmarshaller('React', function(d) {
+  if (d._R) {
+    return LOADED_COMPONENTS[d._R] || MISSING_COMPONENT;
+  }
+});
+
+function marshal_component(d) {
+  var ret;
+  _.each(_marshallers, function(v, k) {
+    if (ret) { return; }
+
+    var r = v(d);
+    if (r && d != r) { ret = r; }
+  });
+
+  if (ret) { return ret; }
+}
+
+function unmarshal_component(d) {
+  var ret;
+  _.each(_unmarshallers, function(v, k) {
+    if (ret) { return };
+    var r = v(d);
+    if (r && r != d) {
+      ret = r;
+    }
+  });
+
+  if (ret) { return ret; }
+
+}
+
 function place_refs(d) {
   if (!d) { return; }
 
-
-  if (_.isElement(d)) {
-    return { "_H" : d.id };
+  var boxed = marshal_component(d);
+  if (boxed) {
+    return boxed;
   }
 
-  if (d instanceof Backbone.View) {
-    return { "_B" : d.id, "_C": d._type };
-  }
-
-  if (d._type) {
-    return { "_R" : d.id, "_C" : d._type };
-  }
 
   if (_.isObject(d)) {
     _.each(d, function(v, k) {
@@ -128,28 +199,15 @@ function replace_refs(d) {
   }
 
   if (_.isObject(d)) {
-    if (d._B) {
-      // replace ref
-      d = LOADED_COMPONENTS[d._B];
-    } else if (d._R) {
-      // replace ref
-      d = LOADED_COMPONENTS[d._R];
-    } else if (d._H) {
-      var r = d;
-      d = $("#" + r._H);
-      if (!d.length) {
-        console.log("Can't find HTML element for", r._H,
-          "make sure it is placed into the page!");
-      }
-
-      d = d[0];
-      debug("REPLACED _H REF", r._H, d);
-    } else {
-      _.each(d, function(v, k) {
-
-        d[k] = replace_refs(v);
-      });
+    var unboxed = unmarshal_component(d);
+    if (unboxed) {
+      return unboxed;
     }
+
+    _.each(d, function(v, k) {
+
+      d[k] = replace_refs(v);
+    });
 
   } else if (_.isArray(d)) {
     _.each(d, replace_refs);
