@@ -153,9 +153,12 @@ def dated_url_for(endpoint, **values):
 
     return flask.url_for(endpoint, **values)
 
-@simple_component.after_request
-def add_cache_header(response):
-    response.cache_control.max_age = 300
+def inject_components(response):
+    if response.headers["Content-Type"].find("text/html") == 0:
+        if flask.request.components:
+            injection = marshal_components()
+            response.set_data("%s\n%s" % (response.get_data(as_text=True), injection))
+
     return response
 
 @simple_component.before_app_first_request
@@ -178,7 +181,7 @@ def install(app):
     app.jinja_env.lstrip_blocks = True
 
     app.before_request(add_components)
-    app.jinja_env.globals.update(marshal_components=marshal_components)
+    app.after_request(inject_components)
     app.jinja_env.globals.update(CC=render_component)
 
 def register_blueprint(app):
