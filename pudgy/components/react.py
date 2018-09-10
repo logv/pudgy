@@ -6,7 +6,7 @@ import os
 from ..util import memoize, shelve_it
 
 from .components import CoreComponent
-from .assets import BigPackage
+from .assets import BigPackage, JSComponent
 
 import shlex
 import subprocess
@@ -16,13 +16,7 @@ try:
 except ImportError:
     from io import StringIO
 
-BABEL_BIN = os.path.expanduser("~/node_modules/.bin/babel")
-
-if not os.path.exists(BABEL_BIN):
-    print("*** COULDNT FIND BABEL BIN, REACT COMPONENTS WONT COMPILE")
-    print("*** Try setting the babel bin with reactcomponent.set_bin('path/to/babel')")
-
-def jsx_compile(data, fname='???'):
+def babel_compile(data, fname='???'):
     cmd = "%s --presets @babel/preset-react -f '%s'" % (BABEL_BIN, fname)
 
     p = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -30,14 +24,28 @@ def jsx_compile(data, fname='???'):
 
     return stdout.decode()
 
-class ReactLoader(CoreComponent, BigPackage):
+def dukpy_compile(data, fname='???'):
+    # try dukpy as a resort, too, but its slower
+    import dukpy
+    return dukpy.jsx_compile(data)
+
+BABEL_BIN = os.path.expanduser("~/node_modules/.bin/babel")
+JSX_COMPILE = babel_compile
+if not os.path.exists(BABEL_BIN):
+    print("*** COULDNT FIND BABEL BIN, REACT COMPONENTS WONT COMPILE")
+    print("*** Try setting the babel bin with reactcomponent.set_bin('path/to/babel')")
+
+    JSX_COMPILE = dukpy_compile
+
+
+class ReactLoader(CoreComponent, JSComponent):
     WRAP_COMPONENT = False
 
 class ReactComponent(bridge.ClientBridge):
     @classmethod
-    def set_babel_bin(s):
-        global BABEL_BIN
-        BABEL_BIN = s
+    def set_jsx_compiler(cls, fn):
+        global JSX_COMPILE
+        JSX_COMPILE = fn
 
     @classmethod
     def get_js(cls):
@@ -47,7 +55,7 @@ class ReactComponent(bridge.ClientBridge):
     @classmethod
     @shelve_it("jsx.cache")
     def js_transform(cls, js):
-        return jsx_compile(js)
+        return JSX_COMPILE(js)
 
     @classmethod
     def find_file(cls, fname, basedir):

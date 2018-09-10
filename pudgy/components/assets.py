@@ -85,10 +85,10 @@ class JSComponent(Component):
         return render_requires(cls, cls.__name__)
 
     def __init__(self, *args, **kwargs):
+        self.__marshalled__ = False
         self.client = dotmap.DotMap()
         super(JSComponent, self).__init__(*args, **kwargs)
 
-        self.__marshalled__ = False
 
 
         self.__activate_str__ = ""
@@ -114,9 +114,11 @@ class JSComponent(Component):
 
     # override this function to provide a custom activation
     def __activate__(self):
-        t = """activate_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }} )"""
+        t = """$C("ComponentBridge", function(m) {
+            m.exports.activate_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }} )
+        })"""
         rendered =  pystache.render(t, self)
-        self.__activate_str__ = t
+        self.__activate_str__ = rendered
 
     def __marshal__(self):
         if not self.__marshalled__:

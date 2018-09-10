@@ -1,5 +1,6 @@
 var LOADED_COMPONENTS = require("common/component_register");
-var cmp_events = $C._events;
+require("vendor/EventEmitter");
+var cmp_events = new EventEmitter();
 
 var debug = require("common/debug").make();
 debug.DEBUG = false;

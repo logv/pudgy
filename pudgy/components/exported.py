@@ -14,7 +14,7 @@ import jinja2
 # BigPackage: renders the component as one large package instead of a split
 
 from .components import Component, set_base_dir, validate_components
-from .assets import MustacheComponent, SassComponent, CSSComponent, JinjaComponent, BigPackage
+from .assets import MustacheComponent, SassComponent, CSSComponent, JinjaComponent, BigPackage, JSComponent
 from .bridge import ClientBridge, ServerBridge
 from .react import ReactComponent
 from .backbone import BackboneComponent

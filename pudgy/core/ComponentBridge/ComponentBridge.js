@@ -99,5 +99,9 @@ module.exports = {
   call_on_component: function(id, fn, args, kwargs) {
     util.call_on_component(id, fn, args, kwargs);
   },
-
+  activate_component: function(id, name, context, display_immediately, ref) {
+    util.activate_component(id, name, context, display_immediately, ref, function(d) {
+      return d;
+    });
+  }
 };

@@ -24,9 +24,3 @@ Component and verifies that their packages can be built.
   * instantiate component
   * display component HTML (if CSS required)
   * notify others that this ref has been created
-
-
-#### after interaction
-
-* client makes RPC call to server with args
-* server makes RPC call to client with response

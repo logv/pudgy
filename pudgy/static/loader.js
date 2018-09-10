@@ -104,7 +104,6 @@
   $C._versions = _versions;
   $C._refs = {};
   $C._raw_import = raw_import;
-  $C._events = _.extend({}, Backbone.Events);
   $C._components = LOADED_COMPONENTS;
 
   window.define_raw = function(name, mod_code) {
@@ -125,42 +124,5 @@
 
 
     return _modules[mod];
-  };
-
-  window.activate_component = function(id, name, context, display_immediately) {
-    $C(name, function(m) {
-      var cmpInst = _.clone(m.exports);
-
-      cmpInst.id = id;
-      cmpInst.name = name;
-
-      var rpc_handler = {
-        get: function rpc_handler(target, prop) {
-          var fn = target.__bridge[prop];
-          if (!fn) {
-            throw prop + "is not an RPC function on " +  target.id;
-          }
-
-          return _.bind(fn, target);
-        }
-      }
-
-      if (cmpInst.__bridge) {
-        // TODO: come back to this and fix RPC to not be a proxy?
-        cmpInst.rpc = new Proxy(cmpInst.__bridge, {
-          get: function(target, prop) {
-            return rpc_handler.get(cmpInst, prop)
-          }
-        });
-      }
-
-      var util = require("common/util");
-
-      var el = $("#" + id);
-      el.show();
-
-      $C._components[id] = cmpInst;
-      $C._events.trigger("cmp::" + id);
-    });
   };
 })();
