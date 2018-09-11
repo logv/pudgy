@@ -3,11 +3,16 @@
 <script> $C._url = "{{ url_for('components.index') }}"; </script>
 {%- endif -%}
 <script type="text/javascript" name="setversions"> $C.set_versions({{ versions | safe }}); </script>
+
+{% if css_package %}
+  <link rel="stylesheet" href="{{ url_for('components.get_big_css', components=css_package) }}" type="text/css"> </link>
+{% endif %}
+
+{% for c in css_singles %}
+<link rel="stylesheet" href="{{ url_for('components.get_css', component=c) }}" type="text/css"> </link>
+{% endfor %}
 {%- if html -%}
 {{ html | safe }}
 {%- endif -%}
 {{ postfix }}
 
-{% for c in css %}
-<link rel="stylesheet" href="{{ url_for('components.get_css', component=c) }}" type="text/css"> </link>
-{% endfor %}

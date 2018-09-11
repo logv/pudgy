@@ -11,10 +11,18 @@ import jinja2
 # ServerBridge: requires foo/foo.js, exposes the server API on the client
 
 # FlaskPage: takes template to render as named parameter
-# BigPackage: renders the component as one large package instead of a split
+# BigJSPackage: renders the component as one large package instead of a split
 
 from .components import Component, set_base_dir, validate_components
-from .assets import MustacheComponent, SassComponent, CSSComponent, JinjaComponent, BigPackage, JSComponent
+
+# templating
+from .assets import MustacheComponent, JinjaComponent
+# style
+from .assets import SassComponent, CSSComponent, BigCSSPackage
+# javascripts
+from .assets import BigJSPackage, JSComponent
+
+
 from .bridge import ClientBridge, ServerBridge
 from .react import ReactComponent
 from .backbone import BackboneComponent

@@ -74,10 +74,24 @@ def invoke(component, fn):
     return flask.jsonify(res)
 
 
+@simple_component.route('/csspkg')
+def get_big_css():
+    requested = flask.request.args.getlist('components')
+    all = []
+
+    for component in requested:
+        found = get_component_by_name(component)
+        all.append(found.get_css())
+
+
+    r = flask.Response("\n".join(all))
+    r.headers["Content-Type"] = "text/css"
+    return r
+
+    abort(404)
+
 @simple_component.route('/<component>/css')
 def get_css(component):
-    requested = flask.request.args.getlist('requires[]')
-
     found = get_component_by_name(component)
     if found:
         r = flask.Response(found.get_css())
@@ -135,7 +149,22 @@ def marshal_components(prelude=True):
     css = flask.request.pudgy.css
     flask.request.pudgy.css = set()
 
-    return jinja2.Markup(render_template("inject_components.html", css=css,
+    big_package = []
+    big_package.sort(key=lambda w: w.__name__)
+    per_package = []
+    for c in css:
+        if type(c) == str:
+            found = get_component_by_name(c)
+            if isinstance(found, components.BigCSSPackage) or \
+                    issubclass(found, components.BigCSSPackage):
+                big_package.append(c)
+            else:
+                per_package.append(c)
+
+
+
+    return jinja2.Markup(render_template("inject_components.html",
+        css_package=big_package, css_singles=per_package,
         postfix=postfix, prelude=prelude, html=html, url_for=dated_url_for,
         versions=json.dumps(component_versions)))
 

@@ -6,7 +6,7 @@ import os
 from ..util import memoize, shelve_it
 
 from .components import CoreComponent
-from .assets import BigPackage, JSComponent
+from .assets import BigJSPackage, JSComponent
 
 import shlex
 import subprocess

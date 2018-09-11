@@ -135,7 +135,8 @@ class CSSComponent(Component):
     @memoize
     def get_css(cls):
         with open(cls.get_file_for_ext("css")) as f:
-            return f.read()
+            data = f.read()
+            return ".scoped_%s { display: inherit !important; }\n %s" % (cls.__name__, data)
 
     def __init__(self, *args, **kwargs):
         super(CSSComponent, self).__init__(self, *args, **kwargs)
@@ -168,11 +169,14 @@ class MustacheComponent(Component):
 
 # A Big Package will automatically include its requires into a
 # package definition
-class BigPackage(JSComponent):
+class BigJSPackage(JSComponent):
     @classmethod
     def get_defines(cls):
         reqs = cls.get_requires()
         return cls.render_requires(reqs)
+
+class BigCSSPackage(Component):
+    pass
 
 mark_virtual(
     MustacheComponent,
@@ -180,5 +184,5 @@ mark_virtual(
     SassComponent,
     CSSComponent,
     JinjaComponent,
-    BigPackage,
+    BigJSPackage,
 )

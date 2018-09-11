@@ -1,9 +1,9 @@
 from .components import *
 
 from .proxy import Proxy, ComponentProxy, HTMLProxy
-from .assets import MustacheComponent, BigPackage, JSComponent
+from .assets import MustacheComponent, BigJSPackage, JSComponent
 
-class ComponentBridge(CoreComponent, MustacheComponent, BigPackage):
+class ComponentBridge(CoreComponent, MustacheComponent, BigJSPackage):
     WRAP_COMPONENT = False
 
 class ClientBridge(JSComponent):
