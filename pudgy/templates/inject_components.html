@@ -7,3 +7,7 @@
 {{ html | safe }}
 {%- endif -%}
 {{ postfix }}
+
+{% for c in css %}
+<link rel="stylesheet" href="{{ url_for('components.get_css', component=c) }}" type="text/css"> </link>
+{% endfor %}

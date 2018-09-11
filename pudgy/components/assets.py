@@ -122,7 +122,7 @@ class JSComponent(Component):
 
     def __marshal__(self):
         if not self.__marshalled__:
-            flask.request.components.add(self)
+            flask.request.pudgy.components.add(self)
             self.__marshalled__ = True
 
     def marshal(self, **kwargs):
@@ -137,14 +137,21 @@ class CSSComponent(Component):
         with open(cls.get_file_for_ext("css")) as f:
             return f.read()
 
-class SassComponent(Component):
+    def __init__(self, *args, **kwargs):
+        super(CSSComponent, self).__init__(self, *args, **kwargs)
+
+        if flask.request:
+            if not self.__template_name__ in flask.request.pudgy.css:
+                flask.request.pudgy.css.add(self.__template_name__)
+
+class SassComponent(CSSComponent):
     @classmethod
     @memoize
     def get_css(cls):
         css_class = "scope_%s" % (cls.__name__)
         with open(cls.get_file_for_ext("sass")) as f:
             data = f.read()
-            return sass.compile(string=".scoped_%s {\n %s\n}" % (cls.__name__, data))
+            return sass.compile(string=".scoped_%s {\n %s\n display: inherit !important;}" % (cls.__name__, data))
 
 
 class MustacheComponent(Component):

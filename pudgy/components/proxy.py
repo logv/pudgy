@@ -2,6 +2,11 @@ import flask
 
 from .components import Component
 
+STR_CLASS = [str]
+try:
+    STR_CLASS.append(unicode)
+except:
+    pass
 class Proxy(object):
     def __init__(self, *args, **kwargs):
         pass
@@ -24,7 +29,7 @@ class HTMLProxy(Proxy):
         self.run_jquery("append", val, selector)
 
     def marshal(self):
-        flask.request.components.add(self)
+        flask.request.pudgy.components.add(self)
 
     def get_object(self):
         r = {}
@@ -42,7 +47,7 @@ class ComponentProxy(HTMLProxy):
 
         self.id = id
 
-        if type(cls) == str:
+        if type(cls) in STR_CLASS:
             self.component = cls
         elif isinstance(cls, Component) or issubclass(cls, Component):
             self.component = cls.__name__
@@ -53,7 +58,7 @@ class ComponentProxy(HTMLProxy):
         self.__transfer__ = []
 
     def marshal(self):
-        flask.request.components.add(self)
+        flask.request.pudgy.components.add(self)
 
     def call(self, fn, *args, **kwargs):
         self.__calls__.append((fn, args, kwargs))

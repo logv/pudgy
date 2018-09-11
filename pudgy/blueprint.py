@@ -3,6 +3,7 @@ from __future__ import print_function
 import jinja2
 import flask
 import json
+import dotmap
 
 from flask import Blueprint, render_template, abort
 
@@ -17,6 +18,7 @@ import os
 import sys
 
 from .util import memoize
+from .components import Component
 
 # TODO: put a hash on the prelude.js when generating it
 @simple_component.route('/prelude.js')
@@ -24,7 +26,7 @@ def get_prelude():
     return prelude.make_prelude()
 
 def get_component_by_name(component):
-    all_components = util.inheritors(components.Component)
+    all_components = util.inheritors(Component)
     found = None
     for c in all_components:
         if c.__name__ == component:
@@ -65,12 +67,24 @@ def invoke(component, fn):
 
     res[cid] = r
 
-    for p in flask.request.components:
+    for p in flask.request.pudgy.components:
         if isinstance(p, components.bridge.Proxy):
             res[p.id] = p.get_object()
 
     return flask.jsonify(res)
 
+
+@simple_component.route('/<component>/css')
+def get_css(component):
+    requested = flask.request.args.getlist('requires[]')
+
+    found = get_component_by_name(component)
+    if found:
+        r = flask.Response(found.get_css())
+        r.headers["Content-Type"] = "text/css"
+        return r
+
+    abort(404)
 
 @simple_component.route('/<component>/requires')
 def get_requires(component):
@@ -93,28 +107,35 @@ def show(component):
     abort(404)
 
 def add_components():
-    flask.request.components = set()
+    flask.request.pudgy = dotmap.DotMap()
+    flask.request.pudgy.components = set()
+    flask.request.pudgy.css = set()
 
 def marshal_components(prelude=True):
     from . import components
     # when lc.__html__ is called, __marshal__ is invoked, so we use lc.render()
     # instead
     lc = components.bridge.ComponentBridge()
-    lc.context.components = flask.request.components
-    flask.request.components = set()
+    lc.context.components = flask.request.pudgy.components
+    flask.request.pudgy.components = set()
     html = lc.render()
 
     component_versions = {}
     for c in lc.context.components:
         component_versions[c.get_class()] = "%s" % c.get_version()
+        if c.get_class() in flask.request.pudgy.css:
+            flask.request.pudgy.css.remove(c.get_class())
 
     component_versions[lc.get_class()] = lc.get_version()
 
     postfix = ""
-    if flask.request.components:
+    if flask.request.pudgy.components:
         postfix = marshal_components(prelude=False)
 
-    return jinja2.Markup(render_template("inject_components.html",
+    css = flask.request.pudgy.css
+    flask.request.pudgy.css = set()
+
+    return jinja2.Markup(render_template("inject_components.html", css=css,
         postfix=postfix, prelude=prelude, html=html, url_for=dated_url_for,
         versions=json.dumps(component_versions)))
 
@@ -155,7 +176,7 @@ def dated_url_for(endpoint, **values):
 
 def inject_components(response):
     if response.headers["Content-Type"].find("text/html") == 0:
-        if flask.request.components:
+        if flask.request.pudgy.components:
             injection = marshal_components()
             response.set_data("%s\n%s" % (response.get_data(as_text=True), injection))
 

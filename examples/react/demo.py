@@ -32,5 +32,5 @@ def hello():
     return dp.render()
 
 
-
-app.run()
+if __name__ == "__main__":
+    app.run()
