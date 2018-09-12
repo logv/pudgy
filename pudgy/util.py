@@ -1,5 +1,6 @@
 import hashlib
 import time
+import os
 
 def inheritors(klass):
     subclasses = set()
@@ -14,10 +15,11 @@ def inheritors(klass):
 
 # from https://stackoverflow.com/questions/16463582/memoize-to-disk-python-persistent-memoization
 # https://stackoverflow.com/posts/47385932/revisions
-from klepto.archives import *
-def shelve_it(file_name):
-    d = file_archive(file_name)
-    d.load()
+from diskcache import Cache
+cache_dir = "./cache/"
+def shelve_it(table_name):
+    cache_file = os.path.join(cache_dir, table_name)
+    d = Cache(cache_file)
 
     def decorator(func):
         def new_func(*args, **kwargs):
@@ -29,7 +31,6 @@ def shelve_it(file_name):
 
             ret = func(*args, **kwargs)
             d[cache_key] = ret
-            d.dump()
 
             return ret
 
