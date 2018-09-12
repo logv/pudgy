@@ -52,6 +52,35 @@
     }
   }
 
+
+
+  function strip_comment_wrap(str) {
+    var chars = str.length;
+    chars -= "<!--".length;
+    chars -= "-->;".length;
+
+    str = str.replace(/^\s*/, "");
+    str = str.replace(/\s*$/, "");
+
+    var ret= str.substr("<!--".length, chars);
+    // Decoding from HTML
+    ret = $('<div />').html(ret).text();
+
+    return ret;
+  }
+
+  function inject_pagelet(id) {
+    var pagelet_id = "pagelet_" + id;
+    // destination is pEl
+    var pEl = $("#pl_" + id);
+
+    // source is sEL
+    var sEl = $("#" + pagelet_id);
+
+    var payload = strip_comment_wrap(sEl.html());
+    pEl.html(payload);
+  }
+
   function load_component(componentName, cb) {
     if (COMPONENTS[componentName]) {
       cb(COMPONENTS[componentName]);
@@ -104,6 +133,7 @@
   $C._versions = _versions;
   $C._refs = {};
   $C._raw_import = raw_import;
+  $C._inject_pagelet = inject_pagelet;
   $C._components = LOADED_COMPONENTS;
 
   window.define_raw = function(name, mod_code) {

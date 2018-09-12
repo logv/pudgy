@@ -124,6 +124,7 @@ def add_components():
     flask.request.pudgy = dotmap.DotMap()
     flask.request.pudgy.components = set()
     flask.request.pudgy.css = set()
+    flask.request.pudgy.pagelets = set()
 
 def marshal_components(prelude=True):
     from . import components
@@ -134,11 +135,13 @@ def marshal_components(prelude=True):
     flask.request.pudgy.components = set()
     html = lc.render()
 
+    # TODO: dont send same component version down multiple times
     component_versions = {}
     for c in lc.context.components:
-        component_versions[c.get_class()] = "%s" % c.get_version()
-        if c.get_class() in flask.request.pudgy.css:
-            flask.request.pudgy.css.remove(c.get_class())
+        if c.__marshalled__:
+            component_versions[c.get_class()] = "%s" % c.get_version()
+            if c.get_class() in flask.request.pudgy.css:
+                flask.request.pudgy.css.remove(c.get_class())
 
     component_versions[lc.get_class()] = lc.get_version()
 
@@ -204,10 +207,11 @@ def dated_url_for(endpoint, **values):
     return flask.url_for(endpoint, **values)
 
 def inject_components(response):
-    if response.headers["Content-Type"].find("text/html") == 0:
-        if flask.request.pudgy.components:
-            injection = marshal_components()
-            response.set_data("%s\n%s" % (response.get_data(as_text=True), injection))
+    if not flask.request.pudgy.pipelined:
+        if response.headers["Content-Type"].find("text/html") == 0:
+            if flask.request.pudgy.components:
+                injection = marshal_components()
+                response.set_data("%s\n%s" % (response.get_data(as_text=True), injection))
 
     return response
 

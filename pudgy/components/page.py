@@ -2,8 +2,10 @@ from .components import Component
 
 import flask
 
+from .bigpipe import Pipeline
+
 # for a Page to be a proper Component, it needs to give an ID to its body
-class Page(Component):
+class Page(Pipeline):
     def __init__(self, *args, **kwargs):
         super(Page, self).__init__(*args, **kwargs)
         self.__marshal__()
@@ -16,11 +18,11 @@ class Page(Component):
         t = '$("body").attr("id", "%s");' % (self.__html_id__())
         self.__add_activation__(t)
 
-class FlaskPage(Page):
+class FlaskPage(Page, Pipeline):
     def render(self):
+        self.__prepare__()
+
         kwargs = self.context.toDict()
         r = flask.render_template(self.context.template, **kwargs)
         # notice that we don't call __wrap_div__ on r
         return r
-
-

@@ -126,12 +126,10 @@ class Component(object):
     def __init__(self, *args, **kwargs):
         self.context = dotmap.DotMap(kwargs)
         self.__template_name__ = str(self.__class__.__name__)
-
+        self.__async__ = False
         self.__hash__ = gethash(self)[:10]
 
 
-
-        self.__prepare__()
 
     def __prepare__(self):
         pass
@@ -179,6 +177,9 @@ class Component(object):
         return ""
 
     def render(self):
+        if not self.__async__: # async components get prepared separately
+            self.__prepare__()
+
         div = self.__render__()
         wrapped = self.__wrap_div__(div)
         return wrapped

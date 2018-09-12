@@ -24,6 +24,7 @@ from .assets import BigJSPackage, JSComponent
 
 
 from .bridge import ClientBridge, ServerBridge
+from .bigpipe import Pipeline, Pagelet
 from .react import ReactComponent
 from .backbone import BackboneComponent
 from .page import Page, FlaskPage

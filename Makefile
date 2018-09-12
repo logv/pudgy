@@ -1,9 +1,3 @@
-react_example:
-				find ./pudgy/ -name "*.html" -o -name "*.jsx" -o -name "*.py" -o -name "*.sass" -o -name "*.mustache" | entr -r python -m examples.react.demo
-
-basic_example:
-				find ./pudgy/ -name "*.html" -o -name "*.js" -o -name "*.py" -o -name "*.sass" -o -name "*.mustache" | entr -r python -m examples.basic.demo
-
 build:
 				python setup.py sdist build
 
@@ -14,3 +8,14 @@ clean_cache:
 				rm cache/jsx.cache/ -fr
 
 .PHONY: build install
+
+# EXAMPLES
+pagelet_example:
+				find ./pudgy/ -name "*.html" -o -name "*.jsx" -o -name "*.py" -o -name "*.sass" -o -name "*.mustache" | entr -r python -m examples.pagelet.demo
+
+react_example:
+				find ./pudgy/ -name "*.html" -o -name "*.jsx" -o -name "*.py" -o -name "*.sass" -o -name "*.mustache" | entr -r python -m examples.react.demo
+
+basic_example:
+				find ./pudgy/ -name "*.html" -o -name "*.js" -o -name "*.py" -o -name "*.sass" -o -name "*.mustache" | entr -r python -m examples.basic.demo
+
