@@ -50,7 +50,8 @@ class ReactComponent(bridge.ClientBridge):
     @classmethod
     def get_js(cls):
         with open(cls.get_file_for_ext("jsx")) as f:
-            return cls.js_transform(f.read())
+            js = cls.js_transform(f.read())
+            return js
 
     @classmethod
     @shelve_it("jsx.cache")

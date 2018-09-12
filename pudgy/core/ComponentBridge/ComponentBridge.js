@@ -6,7 +6,6 @@ var LOADED_COMPONENTS = require("common/component_register");
 
 module.exports = {
   add_invocation: function(cls, fn, args, kwargs) {
-
     var __kwargs__ = {};
     var __cb__ = function() {};
     var __err__ = function(err) {

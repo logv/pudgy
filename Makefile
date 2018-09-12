@@ -8,6 +8,6 @@ build:
 				python setup.py sdist build
 
 install:
-				python setup.py sdist install dist/pudgy-0.0.1.tar.gz
+				python setup.py sdist install dist/pudgy-0.0.3.tar.gz
 
 .PHONY: build install

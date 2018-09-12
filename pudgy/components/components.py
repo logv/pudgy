@@ -61,6 +61,11 @@ class Component(object):
 
     @classmethod
     @memoize
+    def get_js_supplements(cls):
+        return []
+
+    @classmethod
+    @memoize
     def get_template(cls):
         return ""
 
@@ -100,12 +105,16 @@ class Component(object):
         t = cls.get_template()
         c = cls.get_css()
         j = cls.get_js()
+        js_supplements = cls.get_js_supplements()
+        if js_supplements:
+            js_supplements = "\n".join(js_supplements)
+
         r = cls.get_requires()
         d = cls.get_defines()
 
         ret["template"] = t
         ret["css"] = c
-        ret["js"] = j
+        ret["js"] = "%s\n%s" % (j, js_supplements or "")
         ret["requires"] = r
         ret["defines"] = d
 
@@ -163,7 +172,7 @@ class Component(object):
         if self.__display_immediately__():
             return "<div id='%s' class='immediate scoped_%s'>%s</div>" % (self.__html_id__(), self.__template_name__, div)
 
-        return "<div id='%s' class='scoped_%s' style='display: none;'>%s</div>" % (self.__html_id__(), 
+        return "<div id='%s' class='scoped_%s' style='display: none;'>%s</div>" % (self.__html_id__(),
             self.__template_name__, div)
 
     def __render__(self):
@@ -212,7 +221,7 @@ def mark_virtual(*cls):
         VIRTUAL_COMPONENTS.add(c.__name__)
 
 
-mark_virtual(   
+mark_virtual(
     Component,
     CoreComponent,
 )

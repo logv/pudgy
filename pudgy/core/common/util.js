@@ -104,7 +104,9 @@ register_marshaller('HTMLElement', function(d) {
 });
 
 register_marshaller('Backbone', function(d) {
-  if (d instanceof Backbone.View) { return { "_B" : d.id, "_C": d._type }; }
+  if (typeof Backbone != "undefined") {
+    if (d instanceof Backbone.View) { return { "_B" : d.id, "_C": d._type }; }
+  }
 });
 
 register_marshaller('React', function(d) {
@@ -167,7 +169,7 @@ function unmarshal_component(d) {
 }
 
 function place_refs(d) {
-  if (!d) { return; }
+  if (!d) { return d; }
 
   var boxed = marshal_component(d);
   if (boxed) {
@@ -219,6 +221,13 @@ function replace_refs(d) {
 }
 
 
+function activate_triggers(id, ref) {
+  console.log("TRIGGERING BRIDGE", id);
+  cmp_events.trigger("cmp::" + id);
+  if (ref) { cmp_events.trigger("ref::" + ref); }
+
+}
+
 function activate_component(id, name, cls, context, ref, activator) {
   var cmpEl = document.getElementById(id);
 
@@ -234,15 +243,6 @@ function activate_component(id, name, cls, context, ref, activator) {
     var cmpInst = activator(context);
     cmpInst._type = name;
 
-    if (cmpInst.__bridge) {
-      // TODO: come back to this and fix RPC to not be a proxy?
-      cmpInst.rpc = new Proxy(cmpInst.__bridge, {
-        get: function(target, prop) {
-          return rpc_handler.get(cmpInst, prop)
-        }
-      });
-    }
-
     LOADED_COMPONENTS[id] = cmpInst;
     if (ref) {
       $C._refs[ref] = cmpInst;
@@ -250,10 +250,23 @@ function activate_component(id, name, cls, context, ref, activator) {
 
     debug("INSTANTIATED COMPONENT", id, name, cmpInst);
     inject_css("display_" + id, "\n#" + id + " { display: block !important } \n");
-    cmp_events.trigger("cmp::" + id);
-    if (ref) {
-      cmp_events.trigger("ref::" + ref);
+
+
+    if (!cmpInst.__bridge) {
+      return activate_triggers(id, ref);
     }
+
+    $C("ComponentBridge", function() {
+      // TODO: come back to this and fix RPC to not be a proxy?
+      cmpInst.rpc = new Proxy(cmpInst.__bridge, {
+        get: function(target, prop) {
+          return rpc_handler.get(cmpInst, prop)
+        }
+      });
+
+      activate_triggers(id, ref);
+
+    });
   });
 }
 function call_on_component(id, fn, args, kwargs) {

@@ -8,18 +8,16 @@ module.exports = {
 
     // Component Bridge is necessary before loading components
     // so they can properly export their functions
-    $C("ComponentBridge", function() {
-      $C(name, function(cls) {
-        if (!cls.backboneClass) {
-          util.inject_css("scoped_" + name, cls.css);
-          cls.backboneClass = Backbone.View.extend(cls.exports);
-        }
+    $C(name, function(cls) {
+      if (!cls.backboneClass) {
+        util.inject_css("scoped_" + name, cls.css);
+        cls.backboneClass = Backbone.View.extend(cls.exports);
+      }
 
 
-        util.activate_component(id, name, cls, context, ref, function(ctx) {
-          return new cls.backboneClass(ctx);
+      util.activate_component(id, name, cls, context, ref, function(ctx) {
+        return new cls.backboneClass(ctx);
 
-        });
       });
     });
   }

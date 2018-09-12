@@ -32,14 +32,12 @@ class ServerBridge(ClientBridge):
 
     @classmethod
     @memoize
-    def get_js(cls):
-        js = super(ClientBridge, cls).get_js()
-
-        all = [""" module.exports.__bridge = {}; """]
+    def get_rpc_definitions(cls):
+        all = [];
 
 
         t = """
-module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn }}");
+    module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn }}");
             """.strip()
 
         for c in cls.__remote_calls__:
@@ -48,7 +46,12 @@ module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn 
                 "cls" : cls.__name__
             }))
 
-        return """%s\n$C("ComponentBridge", function(m) {\n %s \n })""" % (js, "\n".join(all))
+        return """module.exports.__bridge = {};\n$C("ComponentBridge", function(m) { \n%s\n}\n);""" % ("\n".join(all))
+
+    @classmethod
+    @memoize
+    def get_js_supplements(cls):
+        return [cls.get_rpc_definitions()]
 
     @classmethod
     def api(cls, fn):
