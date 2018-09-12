@@ -4,6 +4,7 @@
 build
 dist
 py3/
+cache/
 pypy/
 dev/
 *.egg-info

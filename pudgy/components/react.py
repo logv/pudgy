@@ -16,13 +16,30 @@ try:
 except ImportError:
     from io import StringIO
 
-def babel_compile(data, fname='???'):
-    cmd = "%s --presets @babel/preset-react -f '%s'" % (BABEL_BIN, fname)
+class JSXCompileError(Exception):
+    pass
 
-    p = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    stdout,stderr = p.communicate(data.encode())
+BABEL_PRESETS = set(["@babel/preset-react"])
+def get_babel_compiler(presets):
 
-    return stdout.decode()
+    presets = list(presets)
+    if not "@babel/preset-react" in presets:
+        presets.append("@babel/preset-react")
+
+    def babel_compile(data, fname='???'):
+        preset_str = ",".join(presets)
+        cmd = "%s --presets %s -f '%s'" % (BABEL_BIN, preset_str, fname)
+
+        p = subprocess.Popen(shlex.split(cmd),
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout,stderr = p.communicate(data.encode())
+
+        if p.returncode != 0:
+            raise JSXCompileError(stdout, stderr)
+
+        return stdout.decode()
+
+    return babel_compile
 
 def dukpy_compile(data, fname='???'):
     # try dukpy as a resort, too, but its slower
@@ -30,7 +47,8 @@ def dukpy_compile(data, fname='???'):
     return dukpy.jsx_compile(data)
 
 BABEL_BIN = os.path.expanduser("~/node_modules/.bin/babel")
-JSX_COMPILE = babel_compile
+JSX_COMPILE = get_babel_compiler(presets=["@babel/preset-react"])
+
 if not os.path.exists(BABEL_BIN):
     print("*** COULDNT FIND BABEL BIN, REACT COMPONENTS WONT COMPILE")
     print("*** Try setting the babel bin with reactcomponent.set_bin('path/to/babel')")
@@ -48,6 +66,12 @@ class ReactComponent(bridge.ClientBridge):
         JSX_COMPILE = fn
 
     @classmethod
+    def add_babel_presets(cls, *presets):
+        BABEL_PRESETS.add(*presets)
+        compiler = get_babel_compiler(list(BABEL_PRESETS))
+        cls.set_jsx_compiler(compiler)
+
+    @classmethod
     def get_js(cls):
         with open(cls.get_file_for_ext("jsx")) as f:
             js = cls.js_transform(f.read())
@@ -56,7 +80,7 @@ class ReactComponent(bridge.ClientBridge):
     @classmethod
     @shelve_it("jsx.cache")
     def js_transform(cls, js):
-        return JSX_COMPILE(js)
+        return JSX_COMPILE(js, cls.__name__)
 
     @classmethod
     def find_file(cls, fname, basedir):

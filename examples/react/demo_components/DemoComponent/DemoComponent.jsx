@@ -1,4 +1,4 @@
-var renderer = require("./external_renderer").render;
+import renderer from "./external_renderer";
 
 module.exports = React.createClass({
   handle_click: function(where) {
@@ -6,7 +6,7 @@ module.exports = React.createClass({
   },
   render: function() {
     return <div className='outerdiv'>
-      { renderer.apply(this) }
+      { renderer.render.apply(this) }
     </div>
   }
 });

@@ -10,4 +10,7 @@ build:
 install:
 				python setup.py sdist install dist/pudgy-0.0.3.tar.gz
 
+clean_cache:
+				rm cache/jsx.cache/ -fr
+
 .PHONY: build install
