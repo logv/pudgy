@@ -1,8 +1,15 @@
 from setuptools import setup
 
+try:
+    # python2
+    execfile('pudgy/version.py')
+except NameError as e:
+    # python3
+    eval('exec(open("./pudgy/version.py").read())')
+
 setup(
     name='pudgy',
-    version='0.0.5',
+    version=__version__,
     author='okay',
     author_email='okayzed+pudgy@gmail.com',
     include_package_data=True,

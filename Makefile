@@ -1,8 +1,11 @@
+VERSION=`cat pudgy/version.py | sed 's/__version__=//;s/"//g'`
+
 build:
 				python setup.py sdist build
+				cp dist/pudgy-${VERSION}.tar.gz dist/pudgy-current.tar.gz
 
 install:
-				python setup.py sdist install dist/pudgy-0.0.3.tar.gz
+				pip install dist/pudgy-${VERSION}.tar.gz
 
 clean_cache:
 				rm cache/jsx.cache/ -fr
