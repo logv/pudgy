@@ -2,11 +2,11 @@ from .components import *
 from .assets import JSComponent
 
 import flask
-import preparable
 import time
 
 class Pipeline(Component):
     def pipeline(self):
+        import preparable
         from ..blueprint import marshal_components
 
         flask.request.pudgy.pipelined = True

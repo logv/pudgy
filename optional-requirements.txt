@@ -1,2 +1,5 @@
 # JSX support in React
 dukpy
+
+# async pagelets support
+preparable
