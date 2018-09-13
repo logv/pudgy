@@ -46,11 +46,11 @@ def dukpy_compile(data, fname='???'):
     import dukpy
     return dukpy.jsx_compile(data)
 
-BABEL_BIN = os.path.expanduser("~/node_modules/.bin/babel")
+BABEL_BIN = os.path.expanduser("./node_modules/.bin/babel")
 JSX_COMPILE = get_babel_compiler(presets=["@babel/preset-react"])
 
 if not os.path.exists(BABEL_BIN):
-    print("*** COULDNT FIND BABEL BIN, REACT COMPONENTS WONT COMPILE")
+    print("*** COULDNT FIND BABEL BIN (%s), REACT COMPONENTS WONT COMPILE" % (BABEL_BIN))
     print("*** Try setting the babel bin with reactcomponent.set_bin('path/to/babel')")
 
     JSX_COMPILE = dukpy_compile
@@ -60,6 +60,13 @@ class ReactLoader(CoreComponent, JSComponent):
     WRAP_COMPONENT = False
 
 class ReactComponent(bridge.ClientBridge):
+    @classmethod
+    def set_babel_bin(cls, babel_bin):
+        global BABEL_BIN
+        BABEL_BIN=babel_bin
+        if not os.path.exists(babel_bin):
+            raise Exception("INVALID BABEL BIN PATH", babel_bin)
+
     @classmethod
     def set_jsx_compiler(cls, fn):
         global JSX_COMPILE
