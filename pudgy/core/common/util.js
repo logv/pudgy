@@ -1,4 +1,4 @@
-require("vendor/EventEmitter");
+var EventEmitter = require("vendor/EventEmitter");
 var cmp_events = new EventEmitter();
 
 var LOADED_COMPONENTS = require("common/component_register");
@@ -223,7 +223,6 @@ function replace_refs(d) {
 
 
 function activate_triggers(id, ref) {
-  console.log("TRIGGERING BRIDGE", id);
   cmp_events.trigger("cmp::" + id);
   if (ref) { cmp_events.trigger("ref::" + ref); }
 

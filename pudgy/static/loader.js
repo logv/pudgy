@@ -17,8 +17,8 @@
   var COMPONENTS = {};
   var PENDING = {};
 
-  var MODULE_PREFIX="var module = {}; var exports = {}; (function() {\n";
-  var MODULE_SUFFIX="})(); module.exports || exports";
+  var MODULE_PREFIX="var module = {}; var exports = module.exports = {}; (function() {\n";
+  var MODULE_SUFFIX="})(); module.exports";
 
   function raw_import(str, module_name) {
     var toval = "";
@@ -28,7 +28,15 @@
 
     toval += MODULE_PREFIX + str + MODULE_SUFFIX;
 
-    return eval(toval);
+    var r = eval(toval);
+
+    if (r && r.__esModule) {
+      if (r.default) {
+        r = r.default;
+      }
+    }
+
+    return r;
   }
 
   function load_requires(component, requires, cb) {
@@ -148,6 +156,8 @@
     if (!_modules[mod]) {
       if (_defined[mod]) {
         _modules[mod] = raw_import(_defined[mod], mod);
+
+        // next time we try to define, we execute the following
         _defined[mod] = "console.log('Trying to redefine " + mod + " ');";
       }
     }

@@ -40,7 +40,7 @@ class ServerBridge(ClientBridge):
 
 
         t = """
-    module.exports.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn }}");
+    ex.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn }}");
             """.strip()
 
         for c in cls.__remote_calls__:
@@ -49,7 +49,7 @@ class ServerBridge(ClientBridge):
                 "cls" : cls.__name__
             }))
 
-        return """module.exports.__bridge = {};\n$C("ComponentBridge", function(m) { \n%s\n}\n);""" % ("\n".join(all))
+        return """var ex = exports.default || module.exports; ex.__bridge = {};\n$C("ComponentBridge", function(m) { \n%s\n}\n);""" % ("\n".join(all))
 
     @classmethod
     @memoize
