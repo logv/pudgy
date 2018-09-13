@@ -50,7 +50,7 @@ class JSComponent(Component):
                 p = p.strip("'\"")
                 jsp = cls.find_file(p, basedir)
 
-                if os.path.exists(jsp):
+                if jsp and os.path.exists(jsp):
                     with open(jsp) as f:
                         js = f.read()
                         js = cls.js_transform(js)
