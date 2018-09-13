@@ -17,6 +17,8 @@ class JinjaComponent(Component):
 
 
 class JSComponent(Component):
+    EXCLUDE_JS = set()
+
     @classmethod
     @memoize
     def get_js(cls):
@@ -47,6 +49,9 @@ class JSComponent(Component):
             requires = REQUIRE_RE.findall(js)
             ret = {}
             for p in requires:
+                if p in cls.EXCLUDE_JS:
+                    continue
+
                 p = p.strip("'\"")
                 jsp = cls.find_file(p, basedir)
 
@@ -136,7 +141,13 @@ class CSSComponent(Component):
     def get_css(cls):
         with open(cls.get_file_for_ext("css")) as f:
             data = f.read()
-            return ".scoped_%s { display: inherit !important; }\n %s" % (cls.__name__, data)
+            # wait for CSS
+            return cls.add_display_rules(data)
+
+    @classmethod
+    def add_display_rules(cls, data):
+        return "%s\n .wf_%s, .scoped_%s { display: inherit !important; } " % (data, cls.__name__, cls.__name__)
+
 
     def __init__(self, *args, **kwargs):
         super(CSSComponent, self).__init__(self, *args, **kwargs)
@@ -152,7 +163,8 @@ class SassComponent(CSSComponent):
         css_class = "scope_%s" % (cls.__name__)
         with open(cls.get_file_for_ext("sass")) as f:
             data = f.read()
-            return sass.compile(string=".scoped_%s {\n %s\n display: inherit !important;}" % (cls.__name__, data))
+            data = sass.compile(string=".scoped_%s {\n %s\n }" % (cls.__name__, data))
+            return cls.add_display_rules(data)
 
 
 class MustacheComponent(Component):

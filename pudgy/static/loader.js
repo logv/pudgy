@@ -17,8 +17,8 @@
   var COMPONENTS = {};
   var PENDING = {};
 
-  var MODULE_PREFIX="var module = {}; (function() {\n";
-  var MODULE_SUFFIX="})(); module.exports";
+  var MODULE_PREFIX="var module = {}; var exports = {}; (function() {\n";
+  var MODULE_SUFFIX="})(); module.exports || exports";
 
   function raw_import(str, module_name) {
     var toval = "";

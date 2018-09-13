@@ -1,6 +1,15 @@
+var css_utils = require("common/css_utils");
+
 var util = require("common/util");
-var react = require("vendor/react");
-var reactDom = require("vendor/react-dom");
+var React = require("vendor/react");
+
+$C._modules["react"] = React
+var ReactDOM = require("vendor/react-dom");
+$C._modules["react-dom"] = ReactDOM;
+
+// push them into global namespace for whiners like me
+window.React = React;
+window.ReactDOM = ReactDOM;
 
 var LOADED_COMPONENTS = require("common/component_register");
 

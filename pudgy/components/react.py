@@ -60,6 +60,8 @@ class ReactLoader(CoreComponent, JSComponent):
     WRAP_COMPONENT = False
 
 class ReactComponent(bridge.ClientBridge):
+    EXCLUDE_JS = set(["react", "react-dom", "vendor/react", "vendor/react-dom"])
+
     @classmethod
     def set_babel_bin(cls, babel_bin):
         global BABEL_BIN
@@ -104,6 +106,14 @@ class ReactComponent(bridge.ClientBridge):
                 return jsp
 
         return None
+
+    @classmethod
+    def get_requires(cls):
+        requires = super(ReactComponent, cls).get_requires()
+
+        cleaned =  [r for r in requires if r not in cls.EXCLUDE_JS]
+        return cleaned
+
 
     def __json__(self):
         self.__marshal__()

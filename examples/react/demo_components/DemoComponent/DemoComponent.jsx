@@ -1,5 +1,7 @@
 import renderer from "./external_renderer";
 
+var React = require("react");
+
 module.exports = React.createClass({
   handle_click: function(where) {
     console.log("I WAS CLICKED!", where);

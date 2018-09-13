@@ -1,4 +1,4 @@
-var backbone = require("vendor/backbone");
+var Backbone = require("vendor/backbone");
 var util = require("common/util");
 
 module.exports = {
