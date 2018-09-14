@@ -42,7 +42,9 @@ class Component(object):
     def get_requires(cls):
         js = cls.get_js()
         requires = REQUIRE_RE.findall(js)
-        return requires or []
+
+        cleaned =  [r for r in requires if r not in cls.EXCLUDE_JS]
+        return cleaned
 
     @classmethod
     @memoize

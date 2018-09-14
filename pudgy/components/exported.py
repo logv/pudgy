@@ -16,11 +16,11 @@ import jinja2
 from .components import Component, set_base_dir, validate_components
 
 # templating
-from .assets import MustacheComponent, JinjaComponent
+from .basic import MustacheComponent, JinjaComponent
 # style
-from .assets import SassComponent, CSSComponent, BigCSSPackage
+from .basic import SassComponent, CSSComponent, BigCSSPackage
 # javascripts
-from .assets import BigJSPackage, JSComponent
+from .basic import JSComponent, BigJSPackage
 
 
 from .bridge import ClientBridge, ServerBridge

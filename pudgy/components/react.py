@@ -6,7 +6,8 @@ import os
 from ..util import memoize, shelve_it
 
 from .components import CoreComponent
-from .assets import BigJSPackage, JSComponent
+from .assets import JSAsset
+from .basic import BigJSPackage, JSComponent
 
 import shlex
 import subprocess
@@ -21,7 +22,6 @@ class JSXCompileError(Exception):
 
 BABEL_PRESETS = set(["@babel/preset-react"])
 def get_babel_compiler(presets):
-
     presets = list(presets)
     if not "@babel/preset-react" in presets:
         presets.append("@babel/preset-react")
@@ -56,11 +56,22 @@ if not os.path.exists(BABEL_BIN):
     JSX_COMPILE = dukpy_compile
 
 
+class JSXAsset(JSAsset):
+    EXT="jsx"
+
+    @classmethod
+    @shelve_it("jsx.cache")
+    def transform(cls, js):
+        return JSX_COMPILE(js, cls.__name__)
+
+# clientside ReactLoader for instantiating react components
+# rendered on the server
 class ReactLoader(CoreComponent, JSComponent):
     WRAP_COMPONENT = False
 
 class ReactComponent(bridge.ClientBridge):
     EXCLUDE_JS = set(["react", "react-dom", "vendor/react", "vendor/react-dom"])
+    ASSET_LOADER=JSXAsset
 
     @classmethod
     def set_babel_bin(cls, babel_bin):
@@ -81,39 +92,8 @@ class ReactComponent(bridge.ClientBridge):
         cls.set_jsx_compiler(compiler)
 
     @classmethod
-    def get_js(cls):
-        with open(cls.get_file_for_ext("jsx")) as f:
-            js = cls.js_transform(f.read())
-            return js
-
-    @classmethod
-    @shelve_it("jsx.cache")
-    def js_transform(cls, js):
-        return JSX_COMPILE(js, cls.__name__)
-
-    @classmethod
-    def find_file(cls, fname, basedir):
-        cls_dir = cls.BASE_DIR
-
-        for ext in ["js", "jsx"]:
-            fname = fname.strip("'\"")
-            if fname[0] == ".":
-                jsp = "%s.%s" % (os.path.join(cls_dir, basedir, fname), ext)
-            else:
-                jsp = "%s.%s" % (os.path.join(cls_dir, fname), ext)
-
-            if os.path.exists(jsp):
-                return jsp
-
-        return None
-
-    @classmethod
-    def get_requires(cls):
-        requires = super(ReactComponent, cls).get_requires()
-
-        cleaned =  [r for r in requires if r not in cls.EXCLUDE_JS]
-        return cleaned
-
+    def add_babel_preset(cls, *presets):
+        cls.add_babel_presets(*presets)
 
     def __json__(self):
         self.__marshal__()

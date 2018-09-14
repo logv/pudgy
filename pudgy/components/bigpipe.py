@@ -1,5 +1,5 @@
 from .components import *
-from .assets import JSComponent
+from .basic import JSComponent
 
 import flask
 import time

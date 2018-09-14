@@ -1,4 +1,4 @@
-import renderer from "./external_renderer";
+import renderer from "./external_renderer.jsx";
 
 var React = require("react");
 

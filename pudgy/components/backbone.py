@@ -1,4 +1,4 @@
-from .assets import JSComponent, BigJSPackage
+from .basic import JSComponent, BigJSPackage
 from .components import CoreComponent, mark_virtual
 
 import pystache

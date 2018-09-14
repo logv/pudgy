@@ -20,7 +20,6 @@ import sys
 from .util import memoize
 from .components import Component
 
-# TODO: put a hash on the prelude.js when generating it
 @simple_component.route('/prelude.js')
 def get_prelude():
     return prelude.make_prelude()
@@ -114,7 +113,6 @@ def get_requires(component):
 def show(component):
     found = get_component_by_name(component)
 
-    # TODO: scoped component css
     if found:
         return found.get_package()
 

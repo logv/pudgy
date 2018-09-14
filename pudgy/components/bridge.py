@@ -1,7 +1,7 @@
 from .components import *
 
 from .proxy import Proxy, ComponentProxy, HTMLProxy
-from .assets import MustacheComponent, BigJSPackage, JSComponent
+from .basic import MustacheComponent, BigJSPackage, JSComponent
 
 import flask
 

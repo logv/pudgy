@@ -77,6 +77,31 @@
     return ret;
   }
 
+  var _injected_css = {};
+  function inject_css(name, css) {
+    if (_injected_css[name]) {
+      return css;
+    }
+    debug("INJECTED CSS FOR", name);
+
+    var to_inject;
+    if (_.isString(css)) {
+      to_inject = css;
+    }
+    if (_.isObject(css)) {
+      to_inject = css.code;
+    }
+
+    var stylesheetEl = $('<style type="text/css" media="screen"/>');
+    stylesheetEl.text(to_inject);
+    stylesheetEl.attr("data-name", name);
+
+    $("head").append(stylesheetEl);
+    _injected_css[name] = true;
+
+    return css;
+  }
+
   function inject_pagelet(id) {
     var pagelet_id = "pagelet_" + id;
     // destination is pEl
@@ -143,6 +168,7 @@
   $C._raw_import = raw_import;
   $C._inject_pagelet = inject_pagelet;
   $C._components = LOADED_COMPONENTS;
+  $C._inject_css= inject_css;
 
   window.define_raw = function(name, mod_code) {
     if (!_defined[name]) {

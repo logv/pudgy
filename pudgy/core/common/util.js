@@ -17,31 +17,6 @@ var rpc_handler = {
   }
 }
 
-var _injected_css = {};
-function inject_css(name, css) {
-  if (_injected_css[name]) {
-    return css;
-  }
-  debug("INJECTED CSS FOR", name);
-
-  var to_inject;
-  if (_.isString(css)) {
-    to_inject = css;
-  }
-  if (_.isObject(css)) {
-    to_inject = css.code;
-  }
-
-  var stylesheetEl = $('<style type="text/css" media="screen"/>');
-  stylesheetEl.text(to_inject);
-  stylesheetEl.attr("data-name", name);
-
-  $("head").append(stylesheetEl);
-  _injected_css[name] = true;
-
-  return css;
-}
-
 function wait_for_refs(refs, cb) {
   var needed = 0;
 
@@ -303,7 +278,7 @@ module.exports = {
   find_replacement_refs: find_replacement_refs,
   replace_refs: replace_refs,
   place_refs: place_refs,
-  inject_css: inject_css,
+  inject_css: $C._inject_css,
   wait_for_refs: wait_for_refs,
   cmp_events: cmp_events,
   activate_component: activate_component,
