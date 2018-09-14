@@ -23,13 +23,13 @@ class JinjaComponent(Component):
         return flask.render_template_string(template_str, **(self.context.toDict()))
 
 class JSComponent(Component):
-    ASSET_LOADER=assets.JSAsset
+    JS_LOADER=assets.JSAsset
     EXCLUDE_JS = set()
 
     @classmethod
     @memoize
     def get_js(cls):
-        p = cls.get_file_for_ext(cls.ASSET_LOADER.EXT)
+        p = cls.get_file_for_ext(cls.JS_LOADER.EXT)
         loader = cls.get_asset_loader(p)
         with open(p) as f:
             return loader.transform(f.read())
@@ -58,7 +58,7 @@ class JSComponent(Component):
                 p = p.strip("'\"")
                 loader = cls.get_asset_loader(p)
                 jsp = loader.find_file(p, basedir, cls.BASE_DIR)
-                js = loader.render_file(jsp)
+                js = loader.render_file_to_js(jsp)
 
                 if not js:
                     ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, cls.__name__)
@@ -78,7 +78,7 @@ class JSComponent(Component):
                 loader = cls.get_asset_loader(p)
                 jsp = loader.find_file(p, basedir, cls.BASE_DIR)
                 if jsp:
-                    js = loader.render_file(jsp)
+                    js = loader.render_file_to_js(jsp)
                     if js:
                         ret[p] = js
                         ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
@@ -139,13 +139,21 @@ class JSComponent(Component):
         return self
 
 class CSSComponent(Component):
+    CSS_LOADER=assets.CssAsset
+
+    @classmethod
+    @memoize
+    def load_css(cls):
+        p = cls.get_file_for_ext(cls.CSS_LOADER.EXT)
+        loader = cls.get_asset_loader(p)
+        css_class = "scoped_%s" % (cls.__name__)
+        with open(p) as f:
+            return loader.transform(f.read(), css_class)
+
     @classmethod
     @memoize
     def get_css(cls):
-        with open(cls.get_file_for_ext("css")) as f:
-            data = f.read()
-            # wait for CSS
-            return cls.add_display_rules(data)
+        return cls.add_display_rules(cls.load_css())
 
     @classmethod
     def add_display_rules(cls, data):
@@ -160,15 +168,7 @@ class CSSComponent(Component):
                 flask.request.pudgy.css.add(self.__template_name__)
 
 class SassComponent(CSSComponent):
-    @classmethod
-    @memoize
-    def get_css(cls):
-        css_class = "scope_%s" % (cls.__name__)
-        with open(cls.get_file_for_ext("sass")) as f:
-            data = f.read()
-            data = sass.compile(string=".scoped_%s {\n %s\n }" % (cls.__name__, data))
-            return cls.add_display_rules(data)
-
+    CSS_LOADER=assets.SassAsset
 
 class MustacheComponent(Component):
     @classmethod

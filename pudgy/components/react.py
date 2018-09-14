@@ -71,7 +71,7 @@ class ReactLoader(CoreComponent, JSComponent):
 
 class ReactComponent(bridge.ClientBridge):
     EXCLUDE_JS = set(["react", "react-dom", "vendor/react", "vendor/react-dom"])
-    ASSET_LOADER=JSXAsset
+    JS_LOADER=JSXAsset
 
     @classmethod
     def set_babel_bin(cls, babel_bin):

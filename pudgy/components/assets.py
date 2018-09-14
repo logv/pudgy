@@ -23,10 +23,10 @@ class AssetLoader(Component):
         return jsp
 
     @classmethod
-    def render_file(cls, filename, error_if_missing=False):
+    def render_file_to_js(cls, filename, error_if_missing=False):
         try:
             with open(filename, "r") as f:
-                js = cls.transform(f.read())
+                js = cls.transform_and_wrap_in_js(f.read())
                 return js
         except IOError as e:
             if error_if_missing:
@@ -42,6 +42,10 @@ class AssetLoader(Component):
     def transform(cls, js):
         return js
 
+    @classmethod
+    def transform_and_wrap_in_js(cls, js):
+        return cls.transform(js)
+
 class JSAsset(AssetLoader):
     EXT="js"
 
@@ -50,17 +54,40 @@ class CssAsset(AssetLoader):
     EXT="css"
 
     @classmethod
-    def inject_css(cls,css):
-        return 'var _inj = %s;\n $C._inject_css("", _inj.css);' % json.dumps({ "css": css })
+    def scopename(cls, css):
+        import hashlib
+        m = hashlib.md5()
+        m.update(css)
+
+        hashed = m.hexdigest()[:8]
+
+        return "scoped_" + hashed
+
 
     @classmethod
-    def transform(cls, css):
-        return cls.inject_css(css)
+    def inject_css(cls,css, scope=""):
+        if not scope:
+            scope = cls.scopename(css)
+
+        return """
+            var _inj = %s;\n $C._inject_css(_inj.scope, _inj.css);
+            module.exports.className = _inj.scope;
+
+        """ % json.dumps({ "css": css, "scope": scope })
+
+    @classmethod
+    def transform(cls, css, scope=""):
+        if scope:
+            return sass.compile(string=".%s { %s }" % (scope, css))
+
+        return sass.compile(string=css)
+
+    @classmethod
+    def transform_and_wrap_in_js(cls, css):
+        scope = cls.scopename(css)
+        css = cls.transform(css, scope=scope)
+        return cls.inject_css(css, scope)
+
 
 class SassAsset(CssAsset):
     EXT="sass"
-
-    @classmethod
-    def transform(cls, css):
-        css = sass.compile(string=css)
-        return cls.inject_css(css)
