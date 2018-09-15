@@ -151,6 +151,12 @@ class Component(object):
 
     # should we wait for any CSS before revealing the component
     def __display_immediately__(self):
+        jss = self.get_requires()
+        if jss:
+            for f in jss:
+                if f.endswith(".css") or f.endswith(".sass"):
+                    return 0
+
         css = self.get_css()
         if not css:
             return 1

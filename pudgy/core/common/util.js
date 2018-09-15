@@ -228,7 +228,7 @@ function activate_component(id, name, cls, context, ref, activator) {
     }
 
     debug("INSTANTIATED COMPONENT", id, name, cmpInst);
-    inject_css("display_" + id, "\n#" + id + " { display: block !important } \n");
+    $(cmpEl).show();
 
 
     if (!cmpInst.__bridge) {
