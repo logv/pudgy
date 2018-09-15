@@ -210,7 +210,7 @@ function activate_component(id, name, cls, context, ref, activator) {
   context.el = cmpEl;
 
   $(context.el).addClass("scoped_" + name);
-  if (cls.exports.className) {
+  if (cls.exports && cls.exports.className) {
     $(context.el).addClass(cls.exports.className);
   }
 

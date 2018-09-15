@@ -6,7 +6,7 @@ from .. import util
 import flask
 import dotmap
 
-import assets
+from . import assets
 
 
 

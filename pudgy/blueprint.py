@@ -5,6 +5,14 @@ import flask
 import json
 import dotmap
 
+# 2/3 python
+try:
+    from StringIO import BytesIO as IO
+except ImportError:
+    from io import BytesIO as IO
+
+import gzip
+
 from flask import Blueprint, render_template, abort
 
 simple_component = Blueprint('components', __name__,
@@ -223,6 +231,34 @@ def install_pudgy():
     # because our first before_request handler never runs, we invoke it
     # manually
     add_components()
+
+# we compress our requests if we can
+@simple_component.after_request
+def compress_request(response):
+    accept_encoding = flask.request.headers.get('Accept-Encoding', '')
+    if 'gzip' not in accept_encoding.lower():
+        return response
+
+    if (response.status_code < 200 or
+        response.status_code >= 300 or
+        'Content-Encoding' in response.headers):
+        return response
+
+    response.direct_passthrough = False
+    if len(response.data) < 2048:
+        return response
+
+    gzip_buffer = IO()
+    gzip_file = gzip.GzipFile(mode='wb',fileobj=gzip_buffer)
+    gzip_file.write(response.data)
+    gzip_file.close()
+
+    response.data = gzip_buffer.getvalue()
+    response.headers['Content-Encoding'] = 'gzip'
+    response.headers['Vary'] = 'Accept-Encoding'
+    response.headers['Content-Length'] = len(response.data)
+
+    return response
 
 def install(app):
     global APP
