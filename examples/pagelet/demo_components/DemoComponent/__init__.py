@@ -5,9 +5,11 @@ import time
 
 class DemoComponent(DemoDir, pudgy.MustacheComponent, pudgy.SassComponent,
     pudgy.BackboneComponent, pudgy.ClientBridge, pudgy.Pagelet):
-    pass
     def __prepare__(self):
         print("STARTING PAGELET", self, time.time())
-        time.sleep(5)
+        time.sleep(self.delay)
         print("FINISHED PAGELET", self, time.time())
+
+    def set_delay(self, delay=0):
+        self.delay = delay
 

@@ -14,34 +14,22 @@ from .demo_components import DemoPage, DemoComponent
 def hello():
     component = DemoComponent()
     component.context.update(
-        title="first component",
+        title="foobar",
         about="about this component"
     )
-    component.set_delay(5)
 
     component.call("handle_click", "SERVER MAIN REQUEST")
-    component.async()
-
-    component2 = DemoComponent()
-    # this component takes one second to prepare and will
-    # delay the whole pageload
-    component2.set_delay(1)
-    component2.context.update(
-        title="second component",
-        about="about this component"
-    )
 
     dp = DemoPage(
         template="example.html",
         component=component,
-        component2=component2
     ).marshal(
         foobar="baz"
     )
 
     dp.call("SetComponent", component, filename="foo")
 
-    return dp.pipeline()
+    return dp.render()
 
 
 

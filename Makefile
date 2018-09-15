@@ -22,3 +22,7 @@ react_example:
 basic_example:
 				find ./pudgy/ -name "*.html" -o -name "*.js" -o -name "*.py" -o -name "*.sass" -o -name "*.mustache" | entr -r python -m examples.basic.demo
 
+
+require_css:
+				find ./pudgy/ -name "*.html" -o -name "*.js" -o -name "*.py" -o -name "*.sass" -o -name "*.mustache" | entr -r python -m examples.require_css.demo
+

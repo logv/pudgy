@@ -2,6 +2,23 @@
 
 {% block body %}
 
-{{ component }}
+<div style='text-align: center'>
+  <div style=''>
+    <h1>Pagelet Example</h1>
 
-{% endblock %}
+    <h4>Component will appear under here</h4>
+  </div>
+
+  <div class='clearfix'>
+    {{ component }}
+  </div>
+
+
+  <div class="clearfix">
+    <h4>And will display above this line</h4>
+
+  </div>
+
+  {{ component2 }}
+</div>
+  {% endblock %}

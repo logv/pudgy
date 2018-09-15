@@ -208,7 +208,11 @@ function activate_component(id, name, cls, context, ref, activator) {
 
   context.id = id;
   context.el = cmpEl;
+
   $(context.el).addClass("scoped_" + name);
+  if (cls.exports.className) {
+    $(context.el).addClass(cls.exports.className);
+  }
 
   var refs = {};
   find_replacement_refs(context, refs);
