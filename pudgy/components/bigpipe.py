@@ -38,16 +38,22 @@ def streaming_compress(generator):
 
 
 # This is the main loop for the preparer. It does a sleep spin
-def sleep_spin(preparer):
+def sleep_spin(preparer, pagelets):
     start = time.time()
+    pagelets = set(pagelets)
     while True:
         time.sleep(0.01)
         preparer.finish_tasks()
 
-        for p in preparer.finished:
-            if not p.__done__:
-                p.__done__ = True
-                yield inject_pagelet()
+        remove = []
+        for p in pagelets:
+            if p.__finished__ and not p.__injected__:
+                p.__injected__ = True
+                remove.append(p)
+                yield inject_pagelet(p)
+
+        for p in remove:
+            pagelets.remove(p)
 
         if preparer.done or not preparer.preparing:
             break
@@ -88,25 +94,28 @@ class Pipeline(Component):
         yield marshal_components()
 
         preparer = preparable.Preparer()
+        pagelets = []
         for p in flask.request.pudgy.pagelets:
             if not p.__async__:
                 continue
 
             p.__done__ = False
-            preparer.add(p.__prepare__, [])
+            preparer.add(p.__prepare_pagelet__, [])
+            pagelets.append(p)
 
 
         preparer.startup()
-        sleep_spin(preparer)
+        for p in sleep_spin(preparer, pagelets):
+            yield p
 
         for p in flask.request.pudgy.pagelets:
             if not p.__async__:
                 continue
 
-            p.__finished__ = True
             flask.request.pudgy.components.add(p)
 
-            yield inject_pagelet(p)
+            if not p.__injected__:
+                yield inject_pagelet(p)
 
         yield marshal_components()
 
@@ -132,6 +141,21 @@ class Pagelet(JSComponent):
         else:
             return super(Pagelet, self).render()
 
+    def __prepare_pagelet__(self):
+        self.__injected__ = False
+        import types
+        r = self.__prepare__()
+
+        if isinstance(r, types.GeneratorType):
+            for p in r:
+                yield p
+
+            self.__finished__ = True
+        else:
+            self.__finished__ = True
+            yield r
+
+
     def __activate_tag__(self):
         if self.__async__ and not self.__finished__:
             return ""
@@ -141,4 +165,10 @@ class Pagelet(JSComponent):
     def __work__(self):
         pass
 
-mark_virtual(Pagelet, Pipeline)
+class NoJSPagelet(Pagelet):
+    # has no JS file associated with it
+    @classmethod
+    def get_js(cls):
+        return ""
+
+mark_virtual(Pagelet, Pipeline, NoJSPagelet)
