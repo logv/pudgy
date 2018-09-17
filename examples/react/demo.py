@@ -7,6 +7,8 @@ import pudgy
 
 app = flask.Flask(__name__)
 pudgy.register_blueprint(app)
+#pudgy.register_requires("vendor/react", "static/vendor/react-0.12.js");
+#pudgy.add_to_prelude("pudgy/core/vendor/react.js", name="vendor/react")
 
 from .demo_components import DemoPage, DemoComponent
 

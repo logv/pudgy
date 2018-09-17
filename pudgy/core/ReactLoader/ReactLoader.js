@@ -1,9 +1,8 @@
 var util = require("common/util");
-var React = require("vendor/react");
 
-$C._modules["react"] = React
-var ReactDOM = require("vendor/react-dom");
-$C._modules["react-dom"] = ReactDOM;
+// This needs to be over-rideable
+var React = require("react");
+var ReactDOM = require("react-dom");
 
 // push them into global namespace for whiners like me
 window.React = React;

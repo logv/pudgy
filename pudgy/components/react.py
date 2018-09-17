@@ -69,8 +69,11 @@ class JSXAsset(JSAsset):
 class ReactLoader(CoreComponent, JSComponent):
     WRAP_COMPONENT = False
 
+JSComponent.set_require("react", "vendor/react")
+JSComponent.set_require("react-dom", "vendor/react-dom")
+
 class ReactComponent(bridge.ClientBridge):
-    EXCLUDE_JS = set(["react", "react-dom", "vendor/react", "vendor/react-dom"])
+    EXCLUDE_JS = set(["react", "react-dom"])
     JS_LOADER=JSXAsset
 
     @classmethod

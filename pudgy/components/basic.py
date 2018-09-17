@@ -25,6 +25,7 @@ class JinjaComponent(Component):
 class JSComponent(Component):
     JS_LOADER=assets.JSAsset
     EXCLUDE_JS = set()
+    MODULE_MAP = {}
 
     @classmethod
     @memoize
@@ -43,6 +44,11 @@ class JSComponent(Component):
 
         return assets.JSAsset
 
+    @classmethod
+    def set_require(cls, name, fname):
+        cls.MODULE_MAP[name] = fname
+
+
 
     @classmethod
     def render_requires(cls, requested):
@@ -57,7 +63,11 @@ class JSComponent(Component):
 
                 p = p.strip("'\"")
                 loader = cls.get_asset_loader(p)
-                jsp = loader.find_file(p, basedir, cls.BASE_DIR)
+                sp = p
+                if sp in cls.MODULE_MAP:
+                    sp = cls.MODULE_MAP[p]
+
+                jsp = loader.find_file(sp, basedir, cls.BASE_DIR)
                 js = loader.render_file_to_js(jsp)
 
                 if not js:
@@ -76,7 +86,11 @@ class JSComponent(Component):
 
             for p in requires:
                 loader = cls.get_asset_loader(p)
-                jsp = loader.find_file(p, basedir, cls.BASE_DIR)
+                sp = p
+                if sp in cls.MODULE_MAP:
+                    sp = cls.MODULE_MAP[p]
+
+                jsp = loader.find_file(sp, basedir, cls.BASE_DIR)
                 if jsp:
                     js = loader.render_file_to_js(jsp)
                     if js:

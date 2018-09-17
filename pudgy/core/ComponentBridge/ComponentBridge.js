@@ -1,6 +1,6 @@
 var debug = require("common/debug").make();
 var util = require("common/util");
-var reqwest = require("vendor/reqwest");
+var reqwest = require("reqwest");
 
 debug.DEBUG = false;
 

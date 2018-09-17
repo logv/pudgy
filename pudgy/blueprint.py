@@ -28,6 +28,7 @@ import sys
 from .util import memoize
 from .components import Component
 
+
 @simple_component.route('/prelude.js')
 def get_prelude():
     return prelude.make_prelude()
