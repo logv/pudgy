@@ -6,7 +6,8 @@ import os
 import pudgy
 
 app = flask.Flask(__name__)
-pudgy.register_blueprint(app)
+# component_dir is relative to app.root_path
+pudgy.register_blueprint(app, component_dir="demo_components")
 
 from .demo_components import DemoPage, DemoComponent
 

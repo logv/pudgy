@@ -210,9 +210,12 @@ function activate_component(id, name, cls, context, ref, activator) {
   context.id = id;
   context.el = cmpEl;
 
-  context.el.className += " scoped_" + name;
-  if (cls.exports && cls.exports.className) {
-    context.el.className += " " + cls.exports.className;
+  if (cmpEl) {
+    cmpEl.className += " scoped_" + name;
+
+    if (cls.exports && cls.exports.className) {
+      cmpEl.className += " " + cls.exports.className;
+    }
   }
 
   var refs = {};
@@ -229,7 +232,9 @@ function activate_component(id, name, cls, context, ref, activator) {
     }
 
     debug("INSTANTIATED COMPONENT", id, name, cmpInst);
-    cmpEl.style.display = "auto";
+    if (cmpEl) {
+      cmpEl.style.display = "auto";
+    }
 
 
     if (!cmpInst.__bridge) {

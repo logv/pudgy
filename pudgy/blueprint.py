@@ -276,5 +276,15 @@ def install(app):
     app.after_request(inject_components)
     app.jinja_env.globals.update(CC=render_component)
 
-def register_blueprint(app):
+def register_blueprint(app, component_dir=None):
     app.register_blueprint(simple_component)
+
+    if not component_dir:
+        component_dir = "components"
+
+    component_dir = os.path.join(app.root_path, component_dir)
+
+
+    base_dir = os.path.abspath(component_dir)
+    print(" * Pudgy component dir is", base_dir)
+    Component.set_base_dir(base_dir)

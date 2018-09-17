@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from .components import *
 from . import proxy
 
@@ -8,14 +10,41 @@ import dotmap
 
 from . import assets
 
+import os
 
+RAPID_PUDGY_KEY="RAPID_PUDGY"
+CREATE_FILES=RAPID_PUDGY_KEY in os.environ
+def touch(fname):
+    if os.path.exists(fname):
+        os.utime(fname, None)
+    else:
+        open(fname, 'a').close()
+
+
+def openfile(fname):
+    try:
+        return open(fname)
+    except IOError as e:
+        if CREATE_FILES:
+            basedir = os.path.dirname(fname)
+            try:
+                os.makedirs(basedir)
+            except:
+                pass
+            touch(fname)
+
+            print("CREATED FILE FOR COMPONENT:", fname)
+            return open(fname)
+        else:
+            print(" * use %s=1 to auto-create" % RAPID_PUDGY, fname)
+            raise e
 
 
 class JinjaComponent(Component):
     @classmethod
     @memoize
     def get_template(cls):
-        with open(cls.get_file_for_ext("html")) as f:
+        with openfile(cls.get_file_for_ext("html")) as f:
             return f.read()
 
     def __render__(self):
@@ -33,7 +62,7 @@ class JSComponent(Component):
     def get_js(cls):
         p = cls.get_file_for_ext(cls.JS_LOADER.EXT)
         loader = cls.get_asset_loader(p)
-        with open(p) as f:
+        with openfile(p) as f:
             return loader.transform(f.read())
 
     @classmethod
@@ -52,7 +81,7 @@ class JSComponent(Component):
     @classmethod
     def define_requires(cls, name, filename=None, data=None):
         if filename:
-            with open(filename) as f:
+            with openfile(filename) as f:
                 data = f.read()
 
 
@@ -175,7 +204,7 @@ class CSSComponent(Component):
         p = cls.get_file_for_ext(cls.CSS_LOADER.EXT)
         loader = cls.get_asset_loader(p)
         css_class = "scoped_%s" % (cls.__name__)
-        with open(p) as f:
+        with openfile(p) as f:
             return loader.transform(f.read(), css_class)
 
     @classmethod
@@ -202,7 +231,7 @@ class MustacheComponent(Component):
     @classmethod
     @memoize
     def get_template(cls):
-        with open(cls.get_file_for_ext("mustache")) as f:
+        with openfile(cls.get_file_for_ext("mustache")) as f:
             return f.read()
 
     def __render__(self):

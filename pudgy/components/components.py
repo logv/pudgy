@@ -207,14 +207,14 @@ def set_base_dir(d):
 def validate_components():
     valid = 0
     broken = []
-    virtual_components = []
+    virtual_components = set()
     for c in inheritors(Component):
         if c.__name__ in VIRTUAL_COMPONENTS:
-            virtual_components.append(c)
+            virtual_components.add(c.__name__)
 
         try:
             pkg = c.test_package()
-            if not c.__name__ in VIRTUAL_COMPONENTS:
+            if not c.__name__ in virtual_components:
                 valid += 1
         except Exception as e:
             s = "%s Errors:" % (c.__name__)
@@ -238,3 +238,7 @@ mark_virtual(
     Component,
     CoreComponent,
 )
+
+def Virtual(cls):
+    mark_virtual(cls)
+    return cls

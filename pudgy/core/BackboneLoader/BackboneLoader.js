@@ -1,5 +1,6 @@
 var util = require("common/util");
 var Backbone = require("backbone");
+
 var $ = require("vendor/jbone.min.js");
 
 if (!Backbone.$) { Backbone.$ = $; }

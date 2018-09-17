@@ -18,11 +18,13 @@ PRELUDE_RAW = {
     "proxy-polyfill"       : d("vendor/proxy.min.js"),
 }
 
-print PRELUDE
+PRELUDE_LINES = []
 
 def add_to_prelude(name, fname):
-    if not fname in PRELUDE:
-        PRELUDE[name] = fname
+    PRELUDE[name] = fname
+
+def add_prelude_line(line):
+    PRELUDE_LINES.append(line)
 
 def make_prelude():
     with open(PRELUDE["pudgy/prelude"]) as f:
@@ -51,6 +53,9 @@ def make_prelude():
             line = f.read()
             out.append("// %s" % name)
             out.append(line)
+
+    for line in PRELUDE_LINES:
+        out.append(line)
 
 
     out.append("require('pudgy/loader')");
