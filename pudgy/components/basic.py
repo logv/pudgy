@@ -123,7 +123,7 @@ class JSComponent(Component):
     # override this function to provide a custom activation
     def __activate__(self):
         t = """$C("ComponentBridge", function(m) {
-            m.exports.activate_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }} )
+            m.exports.activate_component("{{__html_id__}}", "{{ __template_name__ }}", {}, {{ &__context__ }}, {{ __display_immediately__ }} )
         })"""
         rendered =  pystache.render(t, self)
         self.__activate_str__ = rendered

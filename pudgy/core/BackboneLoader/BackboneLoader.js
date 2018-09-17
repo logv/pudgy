@@ -1,5 +1,8 @@
-var Backbone = require("vendor/backbone");
 var util = require("common/util");
+var Backbone = require("vendor/backbone");
+var $ = require("vendor/jbone.min.js");
+
+if (!Backbone.$) { Backbone.$ = $; }
 
 module.exports = {
   activate_backbone_component:  function activate_backbone_component(id, name, context, display_immediately, ref) {

@@ -17,7 +17,7 @@ def hello():
         title="first component",
         about="about this component"
     )
-    component.set_delay(5)
+    component.set_delay(2)
 
     component.call("handle_click", "SERVER MAIN REQUEST")
     component.async()

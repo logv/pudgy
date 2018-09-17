@@ -1,5 +1,3 @@
-var css_utils = require("common/css_utils");
-
 var util = require("common/util");
 var React = require("vendor/react");
 
@@ -16,6 +14,7 @@ var LOADED_COMPONENTS = require("common/component_register");
 module.exports = {
   activate_react_component:  function activate_react_component(id, name, context, display_immediately, ref) {
     el = document.getElementById(id);
+
 
     var instantiate_component = function(m) {
       var cls = m.exports;

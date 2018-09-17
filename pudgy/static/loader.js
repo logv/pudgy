@@ -5,6 +5,15 @@
     return;
   }
 
+	// htmlDecode
+	function htmlDecode(input){
+		var e = document.createElement('div');
+		e.innerHTML = input;
+		// handle case of empty input
+		return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
+	}
+
+
   var DEBUG = false
   function debug() {
     if (!DEBUG) {
@@ -19,6 +28,14 @@
 
   var MODULE_PREFIX="var module = {}; var exports = module.exports = {}; (function() {\n";
   var MODULE_SUFFIX="})(); module.exports";
+
+  function $get(url, data, cb) {
+    reqwest({
+      url: url,
+      data: data,
+      success: cb
+    });
+  }
 
   function raw_import(str, module_name) {
     var toval = "";
@@ -48,7 +65,7 @@
 
     if (_.keys(needed).length > 0) {
 
-      $.get($C._url + component + "/requires",
+      $get($C._url + component + "/requires",
         { requires: _.keys(needed), q: _versions[component] }, function(res, ok) {
         _.each(res, function(v, k) {
           define_raw(k, v);
@@ -72,9 +89,8 @@
 
     var ret= str.substr("<!--".length, chars);
     // Decoding from HTML
-    ret = $('<div />').html(ret).text();
 
-    return ret;
+    return htmlDecode(ret);
   }
 
   var _injected_css = {};
@@ -92,11 +108,13 @@
       to_inject = css.code;
     }
 
-    var stylesheetEl = $('<style type="text/css" media="screen"/>');
-    stylesheetEl.text(to_inject);
-    stylesheetEl.attr("data-name", name);
+    var stylesheetEl = document.createElement("style");
+    stylesheetEl.type = "text/css";
 
-    $("head").append(stylesheetEl);
+		stylesheetEl.innerHTML = to_inject;
+    stylesheetEl["data-name"] = name;
+
+    document.head.append(stylesheetEl);
     _injected_css[name] = true;
 
     return css;
@@ -105,13 +123,13 @@
   function inject_pagelet(id) {
     var pagelet_id = "pagelet_" + id;
     // destination is pEl
-    var pEl = $("#pl_" + id);
+    var pEl = document.getElementById("pl_" + id);
 
     // source is sEL
-    var sEl = $("#" + pagelet_id);
+    var sEl = document.getElementById(pagelet_id);
 
-    var payload = strip_comment_wrap(sEl.html());
-    pEl.html(payload);
+    var payload = strip_comment_wrap(sEl.innerHTML)
+    pEl.innerHTML = payload;
   }
 
   function load_component(componentName, cb) {
@@ -126,7 +144,7 @@
     }
 
     PENDING[componentName] = [cb];
-    $.get($C._url + componentName, { q: _versions[componentName] }, function(res) {
+    $get($C._url + componentName, { q: _versions[componentName] }, function(res) {
       _.each(res.defines, function(v, k) { define_raw(k, v); });
 
       load_requires(componentName, res.requires, function() {
@@ -158,7 +176,9 @@
 
 
   window.$C = $C;
-  var _modules = {};
+  var _modules = {
+    "vendor/reqwest" : window.reqwest,
+  };
   var _versions = {};
   var _defined = {};
 

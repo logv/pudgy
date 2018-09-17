@@ -15,7 +15,7 @@ class Page(Pipeline):
     def __activate__(self):
         super(Page, self).__activate__()
 
-        t = '$("body").attr("id", "%s");' % (self.__html_id__())
+        t = 'document.body.id = "%s";' % (self.__html_id__())
         self.__add_activation__(t)
 
 class FlaskPage(Page, Pipeline):

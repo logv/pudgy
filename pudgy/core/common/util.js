@@ -20,7 +20,7 @@ var rpc_handler = {
 function wait_for_refs(refs, cb) {
   var needed = 0;
 
-  if (!refs) {
+  if (!refs || !_.keys(refs).length) {
     return cb();
   }
   debug("WAITING FOR REFS", refs);
@@ -92,7 +92,7 @@ register_marshaller('React', function(d) {
 register_unmarshaller('HTMLElement', function(d) {
   if (d._H) {
     var r = d;
-    d = $("#" + r._H);
+    d = document.getElementById(r._H);
     if (!d.length) {
       console.log("Can't find HTML element for", r._H,
         "make sure it is placed into the page!");
@@ -209,9 +209,9 @@ function activate_component(id, name, cls, context, ref, activator) {
   context.id = id;
   context.el = cmpEl;
 
-  $(context.el).addClass("scoped_" + name);
+  context.el.className += " scoped_" + name;
   if (cls.exports && cls.exports.className) {
-    $(context.el).addClass(cls.exports.className);
+    context.el.className += " " + cls.exports.className;
   }
 
   var refs = {};
@@ -228,7 +228,7 @@ function activate_component(id, name, cls, context, ref, activator) {
     }
 
     debug("INSTANTIATED COMPONENT", id, name, cmpInst);
-    $(cmpEl).show();
+    cmpEl.style.display = "auto";
 
 
     if (!cmpInst.__bridge) {

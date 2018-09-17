@@ -1,5 +1,7 @@
 var debug = require("common/debug").make();
 var util = require("common/util");
+var reqwest = require("vendor/reqwest");
+
 debug.DEBUG = false;
 
 var LOADED_COMPONENTS = require("common/component_register");
@@ -24,9 +26,10 @@ module.exports = {
         var a = util.place_refs(args);
         var k = util.place_refs(__kwargs__);
 
-        $.ajax($C._url + cls + "/invoke/" + fn,
-          {
-            type: "POST",
+        reqwest({
+            url: $C._url + cls + "/invoke/" + fn,
+            type: "json",
+            method: "post",
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify({
               args: a, kwargs: k, cid: __id__
