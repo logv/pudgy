@@ -3,7 +3,7 @@ from .components import CoreComponent, mark_virtual
 
 import pystache
 
-class BackboneLoader(CoreComponent, JSComponent):
+class BackboneLoader(CoreComponent, BigJSPackage):
     WRAP_COMPONENT = False
 
 class BackboneComponent(JSComponent):

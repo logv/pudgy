@@ -15,7 +15,7 @@ import hashlib
 REQUIRE_RE = re.compile("""require\(['"](.*?)['"]\)""")
 VIRTUAL_COMPONENTS = set()
 
-from ..util import memoize, gethash, inheritors
+from ..util import memoize, getrandhash, inheritors
 
 def dump_values(w):
     if w:
@@ -129,7 +129,7 @@ class Component(object):
         self.context = dotmap.DotMap(kwargs)
         self.__template_name__ = str(self.__class__.__name__)
         self.__async__ = False
-        self.__hash__ = gethash(self)[:10]
+        self.__hash__ = getrandhash(self)[:10]
 
 
 

@@ -52,7 +52,7 @@ def memoize(func):
 
     return new_func
 
-def gethash(v):
+def getrandhash(v):
     m = hashlib.md5()
     t = str("%s" % time.time()).encode("utf-8")
     h = str(hash(v)).encode("utf-8")
