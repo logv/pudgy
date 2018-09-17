@@ -149,6 +149,9 @@ def marshal_components(prelude=True):
             if c.get_class() in flask.request.pudgy.css:
                 flask.request.pudgy.css.remove(c.get_class())
 
+            for d in c.get_class_dependencies():
+                component_versions[d.get_class()] = "%s" % d.get_version()
+
     component_versions[lc.get_class()] = lc.get_version()
 
     postfix = ""

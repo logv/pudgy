@@ -72,6 +72,10 @@ class Component(object):
         return ""
 
     @classmethod
+    def get_class_dependencies(cls):
+        return [ ]
+
+    @classmethod
     @memoize
     def get_version(cls):
         m = hashlib.md5()

@@ -74,6 +74,10 @@ class ReactComponent(bridge.ClientBridge):
     JS_LOADER=JSXAsset
 
     @classmethod
+    def get_class_dependencies(cls):
+        return [ ReactLoader ]
+
+    @classmethod
     def set_babel_bin(cls, babel_bin):
         global BABEL_BIN
         BABEL_BIN=babel_bin

@@ -7,6 +7,10 @@ class BackboneLoader(CoreComponent, BigJSPackage):
     WRAP_COMPONENT = False
 
 class BackboneComponent(JSComponent):
+    @classmethod
+    def get_class_dependencies(cls):
+        return [ BackboneLoader]
+
     def __json__(self):
         self.__marshal__()
         return { "_B" : self.__html_id__() }
