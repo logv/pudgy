@@ -12,34 +12,29 @@ from .demo_components import DemoPage, DemoComponent
 
 @app.route("/")
 def hello():
-    component = DemoComponent()
-    component.context.update(
-        title="first component",
-        about="about this component"
+    async_component = DemoComponent()
+    async_component.context.update(
+        title="first async_component",
+        about="this async_component is async and is rendered at the end of the request"
     )
-    component.set_delay(2)
+    async_component.set_delay(2)
+    async_component.async()
 
-    component.call("handle_click", "SERVER MAIN REQUEST")
-    component.async()
-
-    component2 = DemoComponent()
+    component = DemoComponent()
     # this component takes one second to prepare and will
     # delay the whole pageload
-    component2.set_delay(1)
-    component2.context.update(
+    component.set_delay(0)
+    component.context.update(
         title="second component",
-        about="about this component"
+        about="this component arrives first and is rendered in the main page request"
     )
 
     dp = DemoPage(
         template="example.html",
         component=component,
-        component2=component2
-    ).marshal(
-        foobar="baz"
+        async_component=async_component
     )
-
-    dp.call("SetComponent", component, filename="foo")
+    dp.call("SetComponent", async_component)
 
     return dp.pipeline()
 

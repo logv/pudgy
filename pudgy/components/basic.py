@@ -26,6 +26,7 @@ class JSComponent(Component):
     JS_LOADER=assets.JSAsset
     EXCLUDE_JS = set()
     MODULE_MAP = {}
+    DEFINITIONS = {}
 
     @classmethod
     @memoize
@@ -45,15 +46,40 @@ class JSComponent(Component):
         return assets.JSAsset
 
     @classmethod
-    def set_require(cls, name, fname):
+    def alias_requires(cls, name, fname):
         cls.MODULE_MAP[name] = fname
 
+    @classmethod
+    def define_requires(cls, name, filename=None, data=None):
+        if filename:
+            with open(filename) as f:
+                data = f.read()
+
+
+        cls.DEFINITIONS[name] = data
 
 
     @classmethod
     def render_requires(cls, requested):
         cls_dir = cls.BASE_DIR
         from .components import REQUIRE_RE
+
+        def requires_to_js(p, basedir):
+            loader = cls.get_asset_loader(p)
+            sp = p
+            if sp in cls.DEFINITIONS:
+                js = cls.DEFINITIONS[sp]
+                jsp = cls.BASE_DIR
+            else:
+                if sp in cls.MODULE_MAP:
+                    sp = cls.MODULE_MAP[p]
+
+                jsp = loader.find_file(sp, basedir, cls.BASE_DIR)
+                if jsp:
+                    js = loader.render_file_to_js(jsp)
+
+            return js, jsp
+
         def render_requires_for_js(js, basedir):
             requires = REQUIRE_RE.findall(js)
             ret = {}
@@ -62,13 +88,7 @@ class JSComponent(Component):
                     continue
 
                 p = p.strip("'\"")
-                loader = cls.get_asset_loader(p)
-                sp = p
-                if sp in cls.MODULE_MAP:
-                    sp = cls.MODULE_MAP[p]
-
-                jsp = loader.find_file(sp, basedir, cls.BASE_DIR)
-                js = loader.render_file_to_js(jsp)
+                js, jsp = requires_to_js(p, basedir)
 
                 if not js:
                     ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, cls.__name__)
@@ -85,20 +105,14 @@ class JSComponent(Component):
             requires = set(component.get_requires()).intersection(set(requested))
 
             for p in requires:
-                loader = cls.get_asset_loader(p)
-                sp = p
-                if sp in cls.MODULE_MAP:
-                    sp = cls.MODULE_MAP[p]
+                js, jsp = requires_to_js(p, basedir)
 
-                jsp = loader.find_file(sp, basedir, cls.BASE_DIR)
-                if jsp:
-                    js = loader.render_file_to_js(jsp)
-                    if js:
-                        ret[p] = js
-                        ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
-                    else:
-                        ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, cls.__name__)
-                        continue
+                if js:
+                    ret[p] = js
+                    ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
+                else:
+                    ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, cls.__name__)
+                    continue
 
 
 

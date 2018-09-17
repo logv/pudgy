@@ -1,3 +1,9 @@
+(function() {
+
+if (window.$C) {
+  return;
+}
+
 var _modules = {}; // we need to load these from the prelude, technically
 var _defined = {};
 
@@ -47,4 +53,4 @@ window.require = function(mod) {
 window.$C = {};
 $C._modules = _modules;
 $C._raw_import = raw_import;
-
+})();

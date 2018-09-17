@@ -7,29 +7,27 @@ import pudgy
 
 app = flask.Flask(__name__)
 pudgy.register_blueprint(app)
-#pudgy.register_requires("vendor/react", "static/vendor/react-0.12.js");
-#pudgy.add_to_prelude("pudgy/core/vendor/react.js", name="vendor/react")
 
 from .demo_components import DemoPage, DemoComponent
+
+# over-ride require('react') with our own version
+pudgy.JSComponent.define_requires("react",
+    filename=os.path.join(app.root_path, 'static/my-react.js'))
 
 @app.route("/")
 def hello():
     component = DemoComponent()
     component.context.update(
-        title="foobar",
-        about="about this component"
+        title="a react component",
+        about=""
     )
-
-    component.call("handle_click", "SERVER MAIN REQUEST")
 
     dp = DemoPage(
         template="example.html",
         component=component,
-    ).marshal(
-        foobar="baz"
     )
 
-    dp.call("SetComponent", component, filename="foo")
+    dp.call("SetComponent", component)
 
     return dp.render()
 

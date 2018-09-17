@@ -91,7 +91,7 @@ class Pipeline(Component):
         r = self.render()
 
         yield r
-        yield marshal_components()
+        yield marshal_components(prelude=True)
 
         preparer = preparable.Preparer()
         pagelets = []
@@ -117,7 +117,7 @@ class Pipeline(Component):
             if not p.__injected__:
                 yield inject_pagelet(p)
 
-        yield marshal_components()
+        yield marshal_components(prelude=False)
 
 
 

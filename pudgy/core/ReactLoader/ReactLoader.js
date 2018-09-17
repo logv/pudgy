@@ -4,6 +4,9 @@ var util = require("common/util");
 var React = require("react");
 var ReactDOM = require("react-dom");
 
+$C._modules["vendor/react"] = React;
+$C._modules["vendor/react-dom"] = ReactDOM;
+
 // push them into global namespace for whiners like me
 window.React = React;
 window.ReactDOM = ReactDOM;

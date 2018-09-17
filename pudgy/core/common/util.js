@@ -1,3 +1,4 @@
+
 var EventEmitter = require("vendor/EventEmitter");
 var cmp_events = new EventEmitter();
 

@@ -69,8 +69,8 @@ class JSXAsset(JSAsset):
 class ReactLoader(CoreComponent, JSComponent):
     WRAP_COMPONENT = False
 
-JSComponent.set_require("react", "vendor/react")
-JSComponent.set_require("react-dom", "vendor/react-dom")
+JSComponent.alias_requires("react", "vendor/react")
+JSComponent.alias_requires("react-dom", "vendor/react-dom")
 
 class ReactComponent(bridge.ClientBridge):
     EXCLUDE_JS = set(["react", "react-dom"])

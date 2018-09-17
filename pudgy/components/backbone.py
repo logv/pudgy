@@ -6,7 +6,7 @@ import pystache
 class BackboneLoader(CoreComponent, BigJSPackage):
     WRAP_COMPONENT = False
 
-JSComponent.set_require("backbone", "vendor/backbone")
+JSComponent.alias_requires("backbone", "vendor/backbone")
 class BackboneComponent(JSComponent):
     @classmethod
     def get_class_dependencies(cls):
