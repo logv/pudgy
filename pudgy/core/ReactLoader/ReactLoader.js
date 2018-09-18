@@ -37,7 +37,7 @@ module.exports = {
       });
     }
 
-    $C(name, instantiate_component);
+    $C._load(name, instantiate_component);
 
   }
 

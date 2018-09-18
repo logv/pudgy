@@ -241,7 +241,7 @@ function activate_component(id, name, cls, context, ref, activator) {
       return activate_triggers(id, ref);
     }
 
-    $C("ComponentBridge", function() {
+    $C._load("ComponentBridge", function() {
       // TODO: come back to this and fix RPC to not be a proxy?
       cmpInst.rpc = new Proxy(cmpInst.__bridge, {
         get: function(target, prop) {

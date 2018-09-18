@@ -179,7 +179,7 @@ class JSComponent(Component):
 
     # override this function to provide a custom activation
     def __activate__(self):
-        t = """$C("ComponentBridge", function(m) {
+        t = """$C._load("ComponentBridge", function(m) {
             m.exports.activate_component("{{__html_id__}}", "{{ __template_name__ }}", {}, {{ &__context__ }}, {{ __display_immediately__ }} )
         })"""
         rendered =  pystache.render(t, self)

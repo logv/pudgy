@@ -147,10 +147,6 @@ function load_component(componentName, cb) {
 
 }
 
-function $C(name, cb) {
-  load_component(name, cb);
-}
-
 $C.set_versions = function(versions) {
   _.each(versions, function(v, k) {
     _versions[k] = v;
@@ -160,6 +156,7 @@ $C.set_versions = function(versions) {
 
 window.$C = _.extend($C, window.$C || {});
 var _versions = {};
+$C._load = load_component;
 $C._versions = _versions;
 $C._refs = {};
 $C._raw_import = raw_import;

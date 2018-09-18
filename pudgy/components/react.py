@@ -118,7 +118,7 @@ class ReactComponent(bridge.ClientBridge):
 
         # we override the activation string with our react activation string
         t = """
-            $C("ReactLoader", function(m) {
+            $C._load("ReactLoader", function(m) {
                 m.exports.activate_react_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }}, "{{ __ref__ }}" )
             });
         """.strip()
