@@ -20,6 +20,10 @@ PRELUDE_RAW = {
 
 PRELUDE_LINES = []
 
+def use_jquery():
+    PRELUDE["jquery"] = d("vendor/jquery-3.3.1.min.js")
+    add_prelude_line("window.jQuery = require('jquery')")
+
 def add_to_prelude(name, fname):
     PRELUDE[name] = fname
 
