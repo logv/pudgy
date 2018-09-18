@@ -12,7 +12,7 @@ from . import assets
 
 import os
 
-RAPID_PUDGY_KEY="RAPID_PUDGY"
+RAPID_PUDGY_KEY="TURBO_PUDGY"
 CREATE_FILES=RAPID_PUDGY_KEY in os.environ
 def touch(fname):
     if os.path.exists(fname):
