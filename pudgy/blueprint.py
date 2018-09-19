@@ -64,7 +64,7 @@ def invoke(component, fn):
     try:
         ret, proxy = found.invoke(cid, fn, args, kwargs)
 
-        r.update(proxy.get_object())
+        r.update(proxy.__ajax_object__())
         r["response"] = ret
     except Exception as e:
         err = str(e)
@@ -76,8 +76,7 @@ def invoke(component, fn):
     res[cid] = r
 
     for p in flask.request.pudgy.components:
-        if isinstance(p, components.bridge.Proxy):
-            res[p.id] = p.get_object()
+        res[p.__html_id__()] = p.__ajax_object__()
 
     return flask.jsonify(res)
 

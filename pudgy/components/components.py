@@ -150,6 +150,12 @@ class Component(object):
         self.__marshal__()
         return { "_H" : self.__html_id__() }
 
+    # return an object of this item that is suitable for transferring
+    # to client.
+    def __ajax_object__(self):
+        return {}
+
+
     def __context__(self):
         return json.dumps(self.client.toDict(), default=dump_values)
 

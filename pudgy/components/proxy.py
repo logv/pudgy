@@ -31,7 +31,7 @@ class HTMLProxy(Proxy):
     def marshal(self):
         flask.request.pudgy.components.add(self)
 
-    def get_object(self):
+    def __ajax_object__(self):
         r = {}
         r["html"] = self.get_html_directives()
         return r
@@ -40,6 +40,9 @@ class HTMLProxy(Proxy):
         ret = self.__html__
         self.__html__ = []
         return ret
+
+    def __html_id__(self):
+        return self.id
 
 class ComponentProxy(HTMLProxy):
     def __init__(self, id, cls, *args, **kwargs):
@@ -81,7 +84,7 @@ class ComponentProxy(HTMLProxy):
         self.__calls__ = []
         return r
 
-    def get_object(self):
+    def __ajax_object__(self):
         r = {}
         r["calls"] = self.get_calls()
         r["html"] = self.get_html_directives()

@@ -92,6 +92,10 @@ function inject_css(name, css) {
     to_inject = css.code;
   }
 
+  if (!to_inject) {
+    return;
+  }
+
   var stylesheetEl = document.createElement("style");
   stylesheetEl.type = "text/css";
 

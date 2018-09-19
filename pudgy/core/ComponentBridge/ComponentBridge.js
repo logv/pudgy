@@ -53,7 +53,9 @@ module.exports = {
                     $el[fn](v);
                   }
                 });
+              });
 
+              _.each(R, function(res, tid) {
                 // 2. activate
                 _.each(res.activations, function(a) {
                   raw_import(a, _.uniqueId("act_"));

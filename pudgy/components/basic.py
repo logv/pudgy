@@ -162,12 +162,16 @@ class JSComponent(Component):
     def __add_activation__(self, jscode):
         self.__activations__.append(jscode)
 
-    def __activate_tag__(self):
+    def __activate_tag__(self, wrapped=True):
         self.__activate__()
 
         a = self.__get_activate_script__()
         if a:
-            return jinja2.Markup('<script type="text/javascript">\n%s\n</script>' % a)
+            if wrapped:
+                return jinja2.Markup('<script type="text/javascript">\n%s\n</script>' % a)
+            else:
+                return a
+
 
         return ""
 
@@ -190,6 +194,9 @@ class JSComponent(Component):
             flask.request.pudgy.components.add(self)
             self.__marshalled__ = True
 
+    def __ajax_object__(self):
+        return { "activations" : [self.__activate_tag__(wrapped=False)] }
+
     def marshal(self, **kwargs):
         self.client.update(**kwargs)
         self.__marshal__()
@@ -211,6 +218,16 @@ class CSSComponent(Component):
     @memoize
     def get_css(cls):
         return cls.add_display_rules(cls.load_css())
+
+
+    @classmethod
+    def get_asset_loader(cls, filename):
+        loaders = util.inheritors(assets.AssetLoader)
+        for l in loaders:
+            if l.match(filename):
+                return l
+
+        return assets.CSSAsset
 
     @classmethod
     def add_display_rules(cls, data):
