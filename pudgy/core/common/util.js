@@ -94,12 +94,11 @@ register_unmarshaller('HTMLElement', function(d) {
   if (d._H) {
     var r = d;
     d = document.getElementById(r._H);
-    if (!d.length) {
+    if (!d) {
       console.log("Can't find HTML element for", r._H,
         "make sure it is placed into the page!");
     }
 
-    d = d[0];
     debug("REPLACED _H REF", r._H, d);
 
     return d;

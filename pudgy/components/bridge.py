@@ -68,15 +68,18 @@ class ServerBridge(ClientBridge):
         if type(obj) == dict:
             if "_H" in obj:
                 h = HTMLProxy(obj["_H"])
+                h.set_type("_H")
                 refs.append(h)
                 return h
 
             elif "_R" in obj and "_C" in obj:
                 c = ComponentProxy(obj["_R"], obj["_C"])
+                c.set_type("_R")
                 refs.append(c)
                 return c
             elif "_B" in obj and "_C" in obj:
                 c = ComponentProxy(obj["_B"], obj["_C"])
+                c.set_type("_B")
                 refs.append(c)
                 return c
 

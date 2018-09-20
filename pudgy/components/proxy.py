@@ -15,7 +15,11 @@ class HTMLProxy(Proxy):
     def __init__(self, id, *args, **kwargs):
         self.id = id
         self.__html__ = []
+        self.type = "_H"
         super(HTMLProxy, self).__init__(*args, **kwargs)
+
+    def __json__(self):
+        return { self.type : self.__html_id__() }
 
     # jquery is limited to only this component's descendants
     def run_jquery(self, fn, strval, selector=None):
@@ -35,6 +39,9 @@ class HTMLProxy(Proxy):
         r = {}
         r["html"] = self.get_html_directives()
         return r
+
+    def set_type(self, t):
+        self.type = t
 
     def get_html_directives(self):
         ret = self.__html__
@@ -59,6 +66,9 @@ class ComponentProxy(HTMLProxy):
 
         self.__calls__ = []
         self.__transfer__ = []
+
+    def __json__(self):
+        return { "_H" : self.__html_id__() }
 
     def marshal(self):
         flask.request.pudgy.components.add(self)
