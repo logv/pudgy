@@ -230,7 +230,7 @@ class CSSComponent(Component):
             if l.match(filename):
                 return l
 
-        return assets.CSSAsset
+        return assets.CssAsset
 
     @classmethod
     def add_display_rules(cls, data):

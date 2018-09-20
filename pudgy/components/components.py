@@ -149,6 +149,9 @@ class Component(object):
     def __activate__(self):
         return ""
 
+    def __classname__(self):
+        return "scoped_%s" % self.__template_name__
+
     def __json__(self):
         self.__marshal__()
         return { "_H" : self.__html_id__() }
@@ -189,10 +192,10 @@ class Component(object):
             return div
 
         if self.__display_immediately__():
-            return "<div id='%s' class='immediate scoped_%s'>%s</div>" % (self.__html_id__(), self.__template_name__, div)
+            return "<div id='%s' class='immediate %s'>%s</div>" % (self.__html_id__(), self.__classname__(), div)
 
-        return "<div id='%s' class='scoped_%s' style='display: none;'>%s</div>" % (self.__html_id__(),
-            self.__template_name__, div)
+        return "<div id='%s' class='%s' style='display: none;'>%s</div>" % (self.__html_id__(),
+            self.__classname__(), div)
 
     def __render__(self):
         return ""

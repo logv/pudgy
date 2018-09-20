@@ -26,8 +26,11 @@ class HTMLProxy(Proxy):
         self.__html__.append((fn, strval, selector));
         return self
 
-    def replace_html(self, val, selector=""):
+    def html(self, val, selector=""):
         self.run_jquery("html", val, selector)
+
+    def replace_html(self, val, selector=""):
+        self.run_jquery("replaceWith", val, selector)
 
     def append_html(self, val, selector=""):
         self.run_jquery("append", val, selector)

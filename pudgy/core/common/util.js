@@ -203,6 +203,11 @@ function activate_triggers(id, ref) {
 
 }
 
+// https://stackoverflow.com/questions/5898656/test-if-an-element-contains-a-class
+function hasClass(element, className) {
+    return (' ' + element.className + ' ').indexOf(' ' + className+ ' ') > -1;
+}
+
 function activate_component(id, name, cls, context, ref, activator) {
   var cmpEl = document.getElementById(id);
 
@@ -210,7 +215,9 @@ function activate_component(id, name, cls, context, ref, activator) {
   context.el = cmpEl;
 
   if (cmpEl) {
-    cmpEl.className += " scoped_" + name;
+    if (!hasClass(cmpEl, "scoped_" + name)) {
+      cmpEl.className += " scoped_" + name;
+    }
 
     if (cls.exports && cls.exports.className) {
       cmpEl.className += " " + cls.exports.className;

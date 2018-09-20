@@ -8,26 +8,24 @@ from .bigpipe import Pipeline
 from .basic import RAPID_PUDGY_KEY, touch
 from .basic import Activatable
 
+import pystache
+
 # for a Page to be a proper Component, it needs to give an ID to its body
 class Page(Activatable, Pipeline):
     def __init__(self, *args, **kwargs):
         super(Page, self).__init__(*args, **kwargs)
+        flask.request.pudgy.components.add(self)
+
         self.__marshalled__ = False
 
         self.__marshal__()
 
-
-    def __get_activate_script__(self):
-        print "GETTING PAGE ACTIVATION SCRIPT"
-        all = [self.__activate_str__]
-        all.extend(self.__activations__)
-
-        return "\n".join(all)
-
     def __activate__(self):
-        print "ACTIVATING PAGE", self
         super(Page, self).__activate__()
 
+        # after the fact activations, set the body ID and className at the end
+        # of the request. this can lead to flash of unstyled content, so prefer
+        # to use FlaskPage and put the class on the body at the start
         t = 'document.body.id = "%s";' % (self.__html_id__())
         self.__add_activation__(t)
 
@@ -35,12 +33,39 @@ class Page(Activatable, Pipeline):
         self.__add_activation__(t)
 
 class FlaskPage(Page, Pipeline):
+    PAGE_TEMPLATE = """
+<html>
+<head> {{ &head }} </head>
+<body id="{{ id }}" class="{{ class }}" {{ &hidden }}> {{ &body }} </body>
+</html>
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(FlaskPage, self).__init__(*args, **kwargs)
+        self.__head__ = []
+
+    def get_head(self):
+        return "\n".join(self.__head__)
+
+    def add_to_head(self, line):
+        self.__head__.append(line)
+        return self
+
+    def add_stylesheet(self, name):
+        self.__head__.append("<link rel='stylesheet' href='%s' />" % flask.url_for('static', filename=name))
+        return ""
+
+    def add_component_stylesheet(self, c):
+        self.__head__.append("<link rel='stylesheet' href='%s' />" % flask.url_for('components.get_css', component=c))
+        return ""
+
+
     def render(self):
         self.__prepare__()
 
         flask.request.pudgy.components.add(self)
-
         kwargs = self.context.toDict()
+
         if RAPID_PUDGY_KEY in os.environ:
             template_dir = os.path.join(flask.current_app.root_path, flask.current_app.template_folder)
             template_file = os.path.join(template_dir, self.context.template)
@@ -53,6 +78,25 @@ class FlaskPage(Page, Pipeline):
                 touch(template_file)
                 print(" * Created %s (TURBO_PUDGY)" % template_file)
 
-        r = flask.render_template(self.context.template, **kwargs)
-        # notice that we don't call __wrap_div__ on r
+        # techncially, we might render <head> twice, but i think its fine for
+        # most browsers - they will treat second <head> as part of the body.
+        # TODO: determine what sort of effects this can cause
+        kwargs['add_stylesheet'] = self.add_stylesheet
+        b = flask.render_template(self.context.template, **kwargs)
+        if not self.__display_immediately__():
+            self.add_component_stylesheet(self.__template_name__)
+
+        # head after body, because we need everyone to add their styles first
+        h = self.get_head()
+
+        inst = {
+            "head" : h,
+            "body" : b,
+            "id" : self.__html_id__(),
+            "class" : self.__classname__(),
+        }
+
+        # notice that we don't call __wrap_div__ on r, because we are putting our own
+        # wrappings in place
+        r = pystache.render(self.PAGE_TEMPLATE, inst)
         return r
