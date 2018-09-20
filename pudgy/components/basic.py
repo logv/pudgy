@@ -39,6 +39,36 @@ def openfile(fname):
             print(" * use %s=1 to auto-create" % RAPID_PUDGY, fname)
             raise e
 
+class Activatable(object):
+
+    def __init__(self, *args, **kwargs):
+        self.__activate_str__ = ""
+        self.__activations__ = []
+        super(Activatable, self).__init__(*args, **kwargs)
+
+    def __add_activation__(self, jscode):
+        self.__activations__.append(jscode)
+
+    def __activate_tag__(self):
+        self.__activate__()
+
+        a = self.__get_activate_script__()
+        if a:
+            return jinja2.Markup('<script type="text/javascript">\n%s\n</script>' % a)
+
+
+        return ""
+
+    def __get_activate_script__(self):
+        all = [self.__activate_str__]
+        all.extend(self.__activations__)
+
+        return "\n".join(all)
+
+    # override this function to provide a custom activation
+    def __activate__(self):
+        return
+
 
 class JinjaComponent(Component):
     @classmethod
@@ -51,7 +81,7 @@ class JinjaComponent(Component):
         template_str = self.get_template()
         return flask.render_template_string(template_str, **(self.context.toDict()))
 
-class JSComponent(Component):
+class JSComponent(Activatable, Component):
     JS_LOADER=assets.JSAsset
     EXCLUDE_JS = set()
     MODULE_MAP = {}
@@ -154,34 +184,11 @@ class JSComponent(Component):
         self.client = dotmap.DotMap()
         super(JSComponent, self).__init__(*args, **kwargs)
 
+    def __marshal__(self):
+        if not self.__marshalled__:
+            flask.request.pudgy.components.add(self)
+            self.__marshalled__ = True
 
-
-        self.__activate_str__ = ""
-        self.__activations__ = []
-
-    def __add_activation__(self, jscode):
-        self.__activations__.append(jscode)
-
-    def __activate_tag__(self, wrapped=True):
-        self.__activate__()
-
-        a = self.__get_activate_script__()
-        if a:
-            if wrapped:
-                return jinja2.Markup('<script type="text/javascript">\n%s\n</script>' % a)
-            else:
-                return a
-
-
-        return ""
-
-    def __get_activate_script__(self):
-        all = [self.__activate_str__]
-        all.extend(self.__activations__)
-
-        return "\n".join(all)
-
-    # override this function to provide a custom activation
     def __activate__(self):
         t = """$C._load("ComponentBridge", function(m) {
             m.exports.activate_component("{{__html_id__}}", "{{ __template_name__ }}", {}, {{ &__context__ }}, {{ __display_immediately__ }} )
@@ -189,13 +196,9 @@ class JSComponent(Component):
         rendered =  pystache.render(t, self)
         self.__activate_str__ = rendered
 
-    def __marshal__(self):
-        if not self.__marshalled__:
-            flask.request.pudgy.components.add(self)
-            self.__marshalled__ = True
-
     def __ajax_object__(self):
-        return { "activations" : [self.__activate_tag__(wrapped=False)] }
+        self.__activate__()
+        return { "activations" : [self.__get_activate_script__()] }
 
     def marshal(self, **kwargs):
         self.client.update(**kwargs)

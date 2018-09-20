@@ -146,6 +146,9 @@ class Component(object):
     def __html_id__(self):
         return "cmp_%s" % self.__hash__
 
+    def __activate__(self):
+        return ""
+
     def __json__(self):
         self.__marshal__()
         return { "_H" : self.__html_id__() }
