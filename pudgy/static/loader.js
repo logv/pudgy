@@ -100,12 +100,24 @@ function inject_css(name, css) {
   stylesheetEl.type = "text/css";
 
   stylesheetEl.innerHTML = to_inject;
-  stylesheetEl["data-name"] = name;
+  stylesheetEl.setAttribute('name', name);
 
   document.head.appendChild(stylesheetEl);
   _injected_css[name] = true;
 
   return css;
+}
+
+_requested_css = {};
+function add_component_css(component) {
+  if (!component || _injected_css[component] || _requested_css[component]) {
+    return
+  }
+  _requested_css[component] = true;
+
+  $get($P._url + component, { q: _versions[component] }, function(res) {
+    inject_css(component, res.css);
+  });
 }
 
 function inject_pagelet(id) {
@@ -167,4 +179,5 @@ $P._raw_import = raw_import;
 $P._inject_pagelet = inject_pagelet;
 $P._components = LOADED_COMPONENTS;
 $P._inject_css= inject_css;
+$P._require_css = add_component_css;
 

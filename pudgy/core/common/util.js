@@ -220,7 +220,9 @@ function activate_component(id, name, cls, context, ref, activator) {
     }
 
     if (cls.exports && cls.exports.className) {
-      cmpEl.className += " " + cls.exports.className;
+      if (!hasClass(cmpEl, cls.exports.className)) {
+        cmpEl.className += " " + cls.exports.className;
+      }
     }
   }
 

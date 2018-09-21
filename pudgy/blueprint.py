@@ -78,6 +78,10 @@ def invoke(component, fn):
     for p in flask.request.pudgy.components:
         res[p.__html_id__()] = p.__ajax_object__()
 
+    res["__request__"] = {
+        "css" : list(flask.request.pudgy.css)
+    }
+
     return flask.jsonify(res)
 
 

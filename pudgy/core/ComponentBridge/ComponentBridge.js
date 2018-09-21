@@ -55,6 +55,13 @@ module.exports = {
                 });
               });
 
+              _.each(R, function(res) {
+                _.each(res.css, function(c) {
+                  $P._require_css(c);
+                });
+              });
+
+
               _.each(R, function(res, tid) {
                 // 2. activate
                 _.each(res.activations, function(a) {
