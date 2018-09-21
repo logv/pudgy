@@ -1,1 +1,1 @@
-module.exports = $C._components;
+module.exports = $P._components;

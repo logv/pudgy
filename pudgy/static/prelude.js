@@ -1,6 +1,6 @@
 (function() {
 
-if (window.$C) {
+if (window.$P) {
   return;
 }
 
@@ -50,7 +50,7 @@ window.require = function(mod) {
   return _modules[mod];
 };
 
-window.$C = {};
-$C._modules = _modules;
-$C._raw_import = raw_import;
+window.$P = {};
+$P._modules = _modules;
+$P._raw_import = raw_import;
 })();

@@ -61,7 +61,7 @@ def sleep_spin(preparer, pagelets):
 def inject_pagelet(pagelet):
     html = pagelet.render()
     t = "\n<div id='pagelet_%s'><!-- %s --></div>\n" % (pagelet.__html_id__(), flask.escape(html))
-    i = "\n<script>$C._inject_pagelet('%s')</script>\n" % pagelet.__html_id__()
+    i = "\n<script>$P._inject_pagelet('%s')</script>\n" % pagelet.__html_id__()
     return "\n".join([t, i])
 
 

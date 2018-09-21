@@ -11,7 +11,7 @@ module.exports = {
 
     // Component Bridge is necessary before loading components
     // so they can properly export their functions
-    $C._load(name, function(cls) {
+    $P._load(name, function(cls) {
       if (!cls.backboneClass) {
         util.inject_css("scoped_" + name, cls.css);
         cls.backboneClass = Backbone.View.extend(cls.exports);

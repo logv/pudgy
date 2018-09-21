@@ -1,8 +1,8 @@
 {%- if prelude -%}
 <script src="{{ url_for('components.get_prelude') }}" > </script>
-<script> $C._url = "{{ url_for('components.index') }}"; </script>
+<script> $P._url = "{{ url_for('components.index') }}"; </script>
 {%- endif -%}
-<script type="text/javascript" name="setversions"> $C.set_versions({{ versions | safe }}); </script>
+<script type="text/javascript" name="setversions"> $P.set_versions({{ versions | safe }}); </script>
 
 {% if css_package %}
   <link rel="stylesheet" href="{{ url_for('components.get_big_css', components=css_package) }}" type="text/css"> </link>

@@ -27,7 +27,7 @@ module.exports = {
         var k = util.place_refs(__kwargs__);
 
         reqwest({
-            url: $C._url + cls + "/invoke/" + fn,
+            url: $P._url + cls + "/invoke/" + fn,
             type: "json",
             method: "post",
             contentType: "application/json; charset=utf-8",

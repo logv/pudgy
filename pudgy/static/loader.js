@@ -6,7 +6,7 @@ var reqwest = require("reqwest");
 window._ = _;
 window.reqwest = reqwest;
 
-if (window.$C.set_versions) {
+if (window.$P.set_versions) {
   return;
 }
 
@@ -49,7 +49,7 @@ function load_requires(component, requires, cb) {
 
   if (_.keys(needed).length > 0) {
 
-    $get($C._url + component + "/requires",
+    $get($P._url + component + "/requires",
       { requires: _.keys(needed), q: _versions[component] }, function(res, ok) {
       _.each(res, function(v, k) {
         define_raw(k, v);
@@ -132,11 +132,11 @@ function load_component(componentName, cb) {
   }
 
   PENDING[componentName] = [cb];
-  $get($C._url + componentName, { q: _versions[componentName] }, function(res) {
+  $get($P._url + componentName, { q: _versions[componentName] }, function(res) {
     _.each(res.defines, function(v, k) { define_raw(k, v); });
 
     load_requires(componentName, res.requires, function() {
-      var klass = $C._raw_import(res.js, componentName);
+      var klass = $P._raw_import(res.js, componentName);
       COMPONENTS[componentName] = res;
       res.exports = klass;
 
@@ -151,20 +151,20 @@ function load_component(componentName, cb) {
 
 }
 
-$C.set_versions = function(versions) {
+$P.set_versions = function(versions) {
   _.each(versions, function(v, k) {
     _versions[k] = v;
   });
   debug("VERSIONS", _versions);
 };
 
-window.$C = _.extend($C, window.$C || {});
+window.$P = _.extend($P, window.$P || {});
 var _versions = {};
-$C._load = load_component;
-$C._versions = _versions;
-$C._refs = {};
-$C._raw_import = raw_import;
-$C._inject_pagelet = inject_pagelet;
-$C._components = LOADED_COMPONENTS;
-$C._inject_css= inject_css;
+$P._load = load_component;
+$P._versions = _versions;
+$P._refs = {};
+$P._raw_import = raw_import;
+$P._inject_pagelet = inject_pagelet;
+$P._components = LOADED_COMPONENTS;
+$P._inject_css= inject_css;
 

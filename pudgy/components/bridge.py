@@ -14,7 +14,7 @@ class ClientBridge(JSComponent):
         self.__marshal__()
 
         t = """
-            $C._load("ComponentBridge", function(m) {
+            $P._load("ComponentBridge", function(m) {
                 m.exports.call_on_component("{{id}}", "{{ fn }}", {{ &args }}, {{ &kwargs }});
             });
         """.strip()
@@ -49,7 +49,7 @@ class ServerBridge(ClientBridge):
                 "cls" : cls.__name__
             }))
 
-        return """var ex = exports.default || module.exports; ex.__bridge = {};\n$C._load("ComponentBridge", function(m) { \n%s\n}\n);""" % ("\n".join(all))
+        return """var ex = exports.default || module.exports; ex.__bridge = {};\n$P._load("ComponentBridge", function(m) { \n%s\n}\n);""" % ("\n".join(all))
 
     @classmethod
     @memoize

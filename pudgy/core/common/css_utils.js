@@ -5,7 +5,7 @@ utils.inject_css("pltbi", ".pltbi { display: none; } ");
 var _injected = {};
 function ScopedCss(name) {
   if (!_injected[name]) {
-    $C._load(name, function(m) {
+    $P._load(name, function(m) {
       if (_injected[name]) {
         return;
       }

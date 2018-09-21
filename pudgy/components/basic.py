@@ -190,7 +190,7 @@ class JSComponent(Activatable, Component):
             self.__marshalled__ = True
 
     def __activate__(self):
-        t = """$C._load("ComponentBridge", function(m) {
+        t = """$P._load("ComponentBridge", function(m) {
             m.exports.activate_component("{{__html_id__}}", "{{ __template_name__ }}", {}, {{ &__context__ }}, {{ __display_immediately__ }} )
         })"""
         rendered =  pystache.render(t, self)

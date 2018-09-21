@@ -234,7 +234,7 @@ function activate_component(id, name, cls, context, ref, activator) {
 
     LOADED_COMPONENTS[id] = cmpInst;
     if (ref) {
-      $C._refs[ref] = cmpInst;
+      $P._refs[ref] = cmpInst;
     }
 
     debug("INSTANTIATED COMPONENT", id, name, cmpInst);
@@ -247,7 +247,7 @@ function activate_component(id, name, cls, context, ref, activator) {
       return activate_triggers(id, ref);
     }
 
-    $C._load("ComponentBridge", function() {
+    $P._load("ComponentBridge", function() {
       // TODO: come back to this and fix RPC to not be a proxy?
       cmpInst.rpc = new Proxy(cmpInst.__bridge, {
         get: function(target, prop) {
@@ -294,7 +294,7 @@ module.exports = {
   find_replacement_refs: find_replacement_refs,
   replace_refs: replace_refs,
   place_refs: place_refs,
-  inject_css: $C._inject_css,
+  inject_css: $P._inject_css,
   wait_for_refs: wait_for_refs,
   cmp_events: cmp_events,
   activate_component: activate_component,

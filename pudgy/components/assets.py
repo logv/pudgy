@@ -70,7 +70,7 @@ class CssAsset(AssetLoader):
             scope = cls.scopename(css)
 
         return """
-            var _inj = %s;\n $C._inject_css(_inj.scope, _inj.css);
+            var _inj = %s;\n $P._inject_css(_inj.scope, _inj.css);
             module.exports.className = _inj.scope;
 
         """ % json.dumps({ "css": css, "scope": scope })

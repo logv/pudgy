@@ -27,7 +27,7 @@ class BackboneComponent(JSComponent):
 
         # we override the activation string with our backbone activation string
         t = """
-            $C._load("BackboneLoader", function(m) {
+            $P._load("BackboneLoader", function(m) {
                 m.exports.activate_backbone_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }}, "{{ __ref__ }}" )
             });
         """.strip()

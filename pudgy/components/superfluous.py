@@ -82,7 +82,7 @@ class SuperfluousComponent(JSComponent, CSSComponent):
 
         # we override the activation string with our backbone activation string
         t = """
-            $C._load("SuperfluousLoader", function(m) {
+            $P._load("SuperfluousLoader", function(m) {
                 m.exports.activate_superfluous_component("{{__html_id__}}", "{{ __template_name__ }}", {{ &__context__ }}, {{ __display_immediately__ }}, "{{ __ref__ }}" )
             });
         """.strip()
