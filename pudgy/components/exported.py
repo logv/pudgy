@@ -27,6 +27,7 @@ from .bridge import ClientBridge, ServerBridge
 from .bigpipe import Pipeline, Pagelet, NoJSPagelet
 from .react import ReactComponent
 from .backbone import BackboneComponent
+from .superfluous import SuperfluousComponent
 from .page import Page, FlaskPage
 
 from .components import Virtual

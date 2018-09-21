@@ -11,8 +11,6 @@ $C._modules["vendor/react-dom"] = ReactDOM;
 window.React = React;
 window.ReactDOM = ReactDOM;
 
-var LOADED_COMPONENTS = require("common/component_register");
-
 module.exports = {
   activate_react_component:  function activate_react_component(id, name, context, display_immediately, ref) {
     el = document.getElementById(id);
