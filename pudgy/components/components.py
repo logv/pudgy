@@ -150,7 +150,7 @@ class Component(object):
         return ""
 
     def __classname__(self):
-        return "scoped_%s" % self.__template_name__
+        return "scoped_%s %s" % (self.__template_name__, self.__template_name__)
 
     def __json__(self):
         self.__marshal__()

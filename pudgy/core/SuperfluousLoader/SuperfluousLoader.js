@@ -35,6 +35,8 @@ function render_component(id, cls, context, cb) {
   cmp.$el.html(rendered);
 
   if (!cmp.$el.hasClass("scoped_" + cls._name)) { cmp.$el.addClass("scoped_" + cls._name); }
+  if (!cmp.$el.hasClass(cls._name)) { cmp.$el.addClass(cls._name); }
+
   if (_.isFunction(cmp.client)) { cmp.client(context); }
   cb && cb(cmp);
 

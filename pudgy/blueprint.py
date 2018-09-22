@@ -26,7 +26,7 @@ import os
 import sys
 
 from .util import memoize
-from .components import Component
+from .components import Component, CSSComponent
 
 
 @simple_component.route('/prelude.js')
@@ -88,11 +88,19 @@ def invoke(component, fn):
 @simple_component.route('/csspkg')
 def get_big_css():
     requested = flask.request.args.getlist('components')
+    files = flask.request.args.getlist('static')
     all = []
+
+    for file in files:
+        filename = file.strip(".")
+
+        with open(os.path.join(flask.current_app.static_folder, filename)) as f:
+            all.append(CSSComponent.CSS_LOADER.transform(f.read()))
 
     for component in requested:
         found = get_component_by_name(component)
         all.append(found.get_css())
+
 
 
     r = flask.Response("\n".join(all))

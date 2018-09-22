@@ -43,20 +43,29 @@ class FlaskPage(Page, Pipeline):
     def __init__(self, *args, **kwargs):
         super(FlaskPage, self).__init__(*args, **kwargs)
         self.__head__ = []
+        self.__stylecomps__ = []
+        self.__stylesheets__ = []
 
     def get_head(self):
+        self.render_stylesheets()
         return "\n".join(self.__head__)
+
+    def render_stylesheets(self):
+        url = flask.url_for('components.get_big_css', components=self.__stylecomps__, static=self.__stylesheets__)
+        self.__head__.append("<link rel='stylesheet' href='%s' />" % url)
+        self.__stylecomps__ = []
+        self.__stylesheets__ = []
 
     def add_to_head(self, line):
         self.__head__.append(line)
         return self
 
     def add_stylesheet(self, name):
-        self.__head__.append("<link rel='stylesheet' href='%s' />" % flask.url_for('static', filename=name))
+        self.__stylesheets__.append(name)
         return ""
 
     def add_component_stylesheet(self, c):
-        self.__head__.append("<link rel='stylesheet' href='%s' />" % flask.url_for('components.get_css', component=c))
+        self.__stylecomps__.append(c)
         return ""
 
 
