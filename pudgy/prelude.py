@@ -10,6 +10,7 @@ d = lambda w: os.path.join(static_folder, w)
 PRELUDE = {
     "underscore"           : d("vendor/underscore-min.js"),
     "reqwest"              : d("vendor/reqwest.min.js"),
+    "EventEmitter"         : d("vendor/EventEmitter.js"),
     "pudgy/prelude"        : d("prelude.js"),
     "pudgy/loader"         : d("loader.js"),
 }
@@ -63,5 +64,7 @@ def make_prelude():
 
 
     out.append("require('pudgy/loader')");
+    out.append("require('pudgy/sfprelude')");
+    out.append("require('pudgy/bootloader')");
 
     return "\n".join(out)

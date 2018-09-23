@@ -15,7 +15,8 @@ import hashlib
 REQUIRE_RE = re.compile("""require\(['"](.*?)['"]\)""")
 VIRTUAL_COMPONENTS = set()
 
-from ..util import memoize, getrandhash, inheritors
+from ..util import memoize, getrandhash, inheritors, gethash
+from collections import defaultdict
 
 def dump_values(w):
     if w:
@@ -26,6 +27,7 @@ def dump_values(w):
 class Component(object):
     WRAP_COMPONENT = True
     BASE_DIR = None
+    NAMESPACE = ""
 
     @classmethod
     def set_base_dir(cls, base_dir):
@@ -44,12 +46,22 @@ class Component(object):
         requires = REQUIRE_RE.findall(js)
 
         cleaned =  [r for r in requires if r not in cls.EXCLUDE_JS]
-        return cleaned
+
+        def clean_r(r):
+            return "%s%s" % (cls.__name__, r[1:]) if r[0] == "." else r
+
+        prefixed = [ clean_r(r)  for r in cleaned]
+        return prefixed
+
+    @classmethod
+    def get_dir(cls):
+        return os.path.join(cls.BASE_DIR, cls.NAMESPACE)
 
     @classmethod
     @memoize
     def get_file_for_ext(cls, ext):
-        return os.path.join(cls.BASE_DIR, cls.__name__, "%s.%s" % (cls.__name__, ext))
+        cls_dir = cls.get_dir()
+        return os.path.join(cls_dir, cls.__name__, "%s.%s" % (cls.__name__, ext))
 
     @classmethod
     @memoize
@@ -106,7 +118,7 @@ class Component(object):
 
     @classmethod
     @memoize
-    def get_package(cls):
+    def get_package_object(cls):
         ret = {}
         t = cls.get_template()
         c = cls.get_css()
@@ -126,7 +138,14 @@ class Component(object):
 
         # clean up items
         ret = {k: v for k, v in ret.items() if v}
+        return ret
 
+    @classmethod
+    @memoize
+    def get_package(cls):
+        ret = cls.get_package_object()
+        ret["namespace"] = cls.NAMESPACE
+        ret["dirhash"] = getdirhash(cls)
         return flask.jsonify(ret)
 
     def __init__(self, *args, **kwargs):
@@ -209,20 +228,45 @@ class Component(object):
         return wrapped
 
 class CoreComponent(Component):
-    pass
+    NAMESPACE='core'
 
 def set_base_dir(d):
     Component.set_base_dir(os.path.join(d, "components"))
-    CoreComponent.set_base_dir(os.path.join(d, "core"))
+    CoreComponent.set_base_dir(d)
+
+# we want to create a lookup from
+# (hash(BASE_DIR), namespace) -> actual component dir
+DIRS = {}
+CLASSES = defaultdict(dict)
+NAMESPACES = defaultdict(dict)
+COMPONENT_NAMES = {}
+
+def getdirhash(c):
+    return gethash(os.path.join(c.BASE_DIR, c.NAMESPACE))
 
 @memoize
 def validate_components():
     valid = 0
     broken = []
     virtual_components = set()
+
     for c in inheritors(Component):
+        base_dir = getdirhash(c)
+
+        if not base_dir in DIRS and hasattr(c, "render_requires"):
+            CLASSES[base_dir] = c
+            DIRS[base_dir] = getdirhash(c)
+
+
         if c.__name__ in VIRTUAL_COMPONENTS:
             virtual_components.add(c.__name__)
+        else:
+            # TODO: allow multiple components to have the same name
+            if c.__name__ in COMPONENT_NAMES:
+                raise Exception("Declared %s but it is redefining %s from %s" %
+                    (c, c.__name__, COMPONENT_NAMES[c.__name__]))
+            else:
+                COMPONENT_NAMES[c.__name__] = c
 
         try:
             pkg = c.test_package()
@@ -250,6 +294,12 @@ mark_virtual(
     Component,
     CoreComponent,
 )
+
+def get_basedir(dirhash):
+    return DIRS[dirhash]
+
+def get_baseclass(dirhash):
+    return CLASSES[dirhash]
 
 def Virtual(cls):
     mark_virtual(cls)

@@ -25,7 +25,7 @@ components.set_base_dir(simple_component.root_path)
 import os
 import sys
 
-from .util import memoize
+from .util import memoize, dated_url_for
 from .components import Component, CSSComponent
 
 
@@ -75,20 +75,19 @@ def invoke(component, fn):
 
     res[cid] = r
 
+    dirhash = {}
     for p in flask.request.pudgy.components:
         res[p.__html_id__()] = p.__ajax_object__()
 
     res["__request__"] = {
-        "css" : list(flask.request.pudgy.css)
+        "css" : list(flask.request.pudgy.css),
     }
 
     return flask.jsonify(res)
 
 
-@simple_component.route('/csspkg')
-def get_big_css():
-    requested = flask.request.args.getlist('components')
-    files = flask.request.args.getlist('static')
+@memoize
+def build_css_package(files, components):
     all = []
 
     for file in files:
@@ -97,11 +96,58 @@ def get_big_css():
         with open(os.path.join(flask.current_app.static_folder, filename)) as f:
             all.append(CSSComponent.CSS_LOADER.transform(f.read()))
 
-    for component in requested:
+    for component in components:
         found = get_component_by_name(component)
         all.append(found.get_css())
 
+    return all
 
+@simple_component.route('/pkg/<dirhash>')
+def get_requires(dirhash):
+    d = flask.request.args.get('data[m]')
+    requested = json.loads(d)
+
+    base_dir = components.get_basedir(dirhash)
+    found = components.get_baseclass(dirhash)
+
+    if found:
+        return flask.jsonify(found.render_requires(requested))
+
+    abort(404)
+
+@simple_component.route('/pkg/components')
+def get_component_package():
+    d = flask.request.args.get("data[m]")
+    cs = json.loads(d)
+
+    ret = {}
+    for c in cs:
+        found = get_component_by_name(c)
+        if found:
+            ret[c] = found.get_package_object()
+
+
+    return flask.jsonify(ret)
+
+@simple_component.route('/csspkg')
+def get_big_css():
+    import base64, json
+    components = flask.request.args.getlist('components')
+    files = flask.request.args.getlist('static')
+
+    if flask.request.args.get('cb64'):
+        cb64 = flask.request.args.get('cb64')
+        cbs = json.loads(base64.b64decode(cb64))
+        components.extend(cbs)
+
+
+    if flask.request.args.get('fb64'):
+        fb64 = flask.request.args.get('fb64')
+        fbs = json.loads(base64.b64decode(fb64))
+        files.extend(fbs)
+
+
+    all = build_css_package(files, components)
 
     r = flask.Response("\n".join(all))
     r.headers["Content-Type"] = "text/css"
@@ -116,16 +162,6 @@ def get_css(component):
         r = flask.Response(found.get_css())
         r.headers["Content-Type"] = "text/css"
         return r
-
-    abort(404)
-
-@simple_component.route('/<component>/requires')
-def get_requires(component):
-    requested = flask.request.args.getlist('requires[]')
-
-    found = get_component_by_name(component)
-    if found:
-        return flask.jsonify(found.render_requires(requested))
 
     abort(404)
 
@@ -155,14 +191,17 @@ def marshal_components(prelude=True):
 
     # TODO: dont send same component version down multiple times
     component_versions = {}
+    component_dirhashes = {}
     for c in lc.context.components:
         if c.__marshalled__:
             component_versions[c.get_class()] = "%s" % c.get_version()
+            component_dirhashes[c.get_class()] = util.gethash(c.BASE_DIR)
             if c.get_class() in flask.request.pudgy.css:
                 flask.request.pudgy.css.remove(c.get_class())
 
             for d in c.get_class_dependencies():
                 component_versions[d.get_class()] = "%s" % d.get_version()
+                component_dirhashes[d.get_class()] = util.gethash(d.BASE_DIR)
 
     component_versions[lc.get_class()] = lc.get_version()
 
@@ -196,36 +235,6 @@ def render_component(name, **kwargs):
     found = get_component_by_name(name)
 
     return found(**kwargs)
-
-APP=None
-def handle_request_to(endpoint, **values):
-    url = flask.url_for(endpoint, **values)
-    req = flask.Request.from_values(path=url)
-    ctx = APP.test_request_context(path=url)
-
-    with ctx:
-        res = APP.dispatch_request()
-    return res
-
-def dated_url_for(endpoint, **values):
-    # we know prelude always returns a string, so
-    # we use python string hashing
-    if endpoint == 'components.get_prelude':
-        res = handle_request_to(endpoint, **values)
-        hsh = hash(res)
-
-        values['q'] = "%x" % (hsh)
-
-    # if the endpoint is a filename, we use timestamp hashing
-    # (but we should really use content hashing, i guess)
-    if endpoint == 'static':
-        filename = values.get('filename', None)
-        if filename:
-            file_path = os.path.join(app.root_path,
-                                     endpoint, filename)
-            values['q'] = int(os.stat(file_path).st_mtime)
-
-    return flask.url_for(endpoint, **values)
 
 def inject_components(response):
     if not flask.request.pudgy.pipelined:
@@ -276,10 +285,6 @@ def compress_request(response):
     return response
 
 def install(app):
-    global APP
-    APP = app
-
-
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
 

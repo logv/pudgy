@@ -8,6 +8,8 @@ from .bigpipe import Pipeline
 from .basic import RAPID_PUDGY_KEY, touch
 from .basic import Activatable
 
+from ..util import dated_url_for
+
 import pystache
 
 # for a Page to be a proper Component, it needs to give an ID to its body
@@ -50,9 +52,44 @@ class FlaskPage(Page, Pipeline):
         self.render_stylesheets()
         return "\n".join(self.__head__)
 
-    def render_stylesheets(self):
-        url = flask.url_for('components.get_big_css', components=self.__stylecomps__, static=self.__stylesheets__)
+    def render_stylesheet_package(self):
+
+        b64_encode_requires = False
+
+        if b64_encode_requires:
+            import base64
+            import json
+            comps = json.dumps(self.__stylecomps__)
+            files = json.dumps(self.__stylesheets__)
+
+            comps = base64.b64encode(comps)
+            files = base64.b64encode(files)
+
+            url = dated_url_for('components.get_big_css', cb64=comps, fb64=files)
+        else:
+            url = dated_url_for('components.get_big_css',
+                components=self.__stylecomps__,
+                static=self.__stylesheets__)
+
         self.__head__.append("<link rel='stylesheet' href='%s' />" % url)
+
+    def render_single_stylesheets(self):
+        for s in self.__stylecomps__:
+            url = dated_url_for('components.get_css', component=s)
+            self.__head__.append("<link rel='stylesheet' href='%s' />" % url)
+
+        for s in self.__stylesheets__:
+            url = dated_url_for('static', filename=s)
+            self.__head__.append("<link rel='stylesheet' href='%s' />" % url)
+
+
+    def render_stylesheets(self):
+        if not self.__stylecomps__ and not self.__stylesheets__:
+            return [""]
+
+        # self.render_single_stylesheets()
+        self.render_stylesheet_package()
+
         self.__stylecomps__ = []
         self.__stylesheets__ = []
 

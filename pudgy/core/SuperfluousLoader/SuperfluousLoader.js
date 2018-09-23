@@ -53,6 +53,7 @@ function activate_component(id, name, context, cb) {
       var events = $P._raw_import(m.events, name + "/events");
       m.events_js = events;
       _.extend(m.exports, events);
+      console.log("M", name, m);
       cls.template = _.template(m.template);
 
       util.inject_css("scoped_" + name, m.css);

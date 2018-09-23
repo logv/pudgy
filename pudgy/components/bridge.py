@@ -34,6 +34,9 @@ class ServerBridge(ClientBridge):
     __remote_calls__ = {}
 
     @classmethod
+    def get_class_dependencies(cls):
+        return [ ComponentBridge ]
+    @classmethod
     @memoize
     def get_rpc_definitions(cls):
         all = [];

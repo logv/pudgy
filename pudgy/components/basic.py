@@ -119,8 +119,9 @@ class JSComponent(Activatable, Component):
 
 
     @classmethod
-    def render_requires(cls, requested):
-        cls_dir = cls.BASE_DIR
+    def render_requires(cls, requested, check_intersection=False):
+        cls_dir = os.path.join(cls.BASE_DIR, cls.NAMESPACE)
+        print("RENDERING REQUIRES", cls, cls_dir, requested)
         from .components import REQUIRE_RE
 
         def requires_to_js(p, basedir):
@@ -128,12 +129,12 @@ class JSComponent(Activatable, Component):
             sp = p
             if sp in cls.DEFINITIONS:
                 js = cls.DEFINITIONS[sp]
-                jsp = cls.BASE_DIR
+                jsp = cls_dir
             else:
                 if sp in cls.MODULE_MAP:
                     sp = cls.MODULE_MAP[p]
 
-                jsp = loader.find_file(sp, basedir, cls.BASE_DIR)
+                jsp = loader.find_file(sp, basedir, cls_dir)
                 if jsp:
                     js = loader.render_file_to_js(jsp)
 
@@ -161,7 +162,10 @@ class JSComponent(Activatable, Component):
         def render_requires(component, basedir):
             ret = {}
 
-            requires = set(component.get_requires()).intersection(set(requested))
+            if check_intersection:
+                requires = set(component.get_requires()).intersection(set(requested))
+            else:
+                requires = set(requested)
 
             for p in requires:
                 js, jsp = requires_to_js(p, basedir)

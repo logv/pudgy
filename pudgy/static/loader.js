@@ -1,10 +1,18 @@
-var LOADED_COMPONENTS = {};
-
 var _ = require("underscore");
 var reqwest = require("reqwest");
+var EventEmitter = require("EventEmitter");
 
 window._ = _;
 window.reqwest = reqwest;
+
+var LOADED_COMPONENTS = {};
+var COMPONENTS = {};
+var PENDING = {};
+
+var CSS_DEFS = {};
+var JS_DEFS = {};
+
+
 
 if (window.$P.set_versions) {
   return;
@@ -28,37 +36,143 @@ function debug() {
   console.log(_.toArray(arguments).join(" "));
 }
 
-var COMPONENTS = {};
-var PENDING = {};
-
-
 function $get(url, data, cb) {
-  reqwest({
+  url = url.replace("//pkg", "/pkg");
+  return reqwest({
     url: url,
     data: data,
     success: cb
   });
 }
 
-function load_requires(component, requires, cb) {
-  debug("LOADING REQUIRES", requires);
+function bootload_factory(type, module_dict, postload) {
+  var factory_emitter = new EventEmitter();
+
+  var to_load = {};
+  var pending = {};
+  function add_pending(modules) {
+    _.each(modules, function(m) {
+      if (!pending[m]) {
+        to_load[m] = true;
+      }
+
+      pending[m] = true;
+    });
+  }
+
+  var issue_request = function() {
+    if (!_.keys(to_load).length) {
+      return;
+    }
+
+    var config = { data: { m: JSON.stringify(_.keys(to_load)) } };
+
+    to_load = {};
+
+
+    function handle_module_dict(data) {
+      if (module_dict) {
+        _.each(data, function(v, k) {
+
+          v.module = k;
+
+          if (postload) {
+            v = postload(k, v);
+          }
+
+          module_dict[k] = v;
+        });
+
+
+        _.each(data, function(v, k) {
+          factory_emitter.trigger(k, [module_dict[k]]);
+        });
+
+      }
+
+    }
+
+    var req = $get($P._url + "/pkg/" + type, config);
+    req.then(handle_module_dict);
+
+    req.fail(function(data) {
+      console.error("Failed to load", data);
+    });
+
+  };
+
+  var throttled_issue_request = _.throttle(issue_request, 50, { leading: false });
+
+  return function bootload(modules, cb) {
+    if (_.isString(modules)) {
+      modules = [modules];
+    }
+
+    var loaded_modules = {};
+    var necessary_modules = _.filter(modules, function(k) {
+      if (module_dict[k]) {
+        loaded_modules[k] = module_dict[k];
+      }
+
+      // Let's see if we can load these modules from localStorage
+
+      return !module_dict[k];
+    });
+
+    if (!necessary_modules.length) {
+      if (cb) {
+        cb(loaded_modules);
+      }
+
+      return;
+    }
+
+    var after = _.after(necessary_modules.length, function() {
+      cb(loaded_modules);
+    });
+
+    _.each(necessary_modules, function(m) {
+      factory_emitter.once(m, function() {
+        loaded_modules[m] = module_dict[m];
+        after();
+      });
+    });
+
+    add_pending(necessary_modules);
+
+    throttled_issue_request();
+
+
+  };
+}
+
+function register_resource_packager(name, def_dict, postload) {
+  return bootload_factory(name, def_dict, postload);
+}
+
+
+
+var _bootloaders = {};
+function load_requires(dirhash, requires, cb) {
+  if (!_bootloaders[dirhash]) {
+    _bootloaders[dirhash] = bootload_factory(dirhash, {}, function(name, res) {
+      define_raw(name, res);
+
+      return res;
+    });
+  }
+
   var needed = {};
   _.each(requires, function(r) {
     if (!_defined[r]) { needed[r] = r; }
-  })
+  });
 
-  if (_.keys(needed).length > 0) {
 
-    $get($P._url + component + "/requires",
-      { requires: _.keys(needed), q: _versions[component] }, function(res, ok) {
-      _.each(res, function(v, k) {
-        define_raw(k, v);
-      });
-      cb();
-    });
-  } else {
-    cb();
+  if (!_.keys(needed).length) {
+    return cb();
   }
+
+  _bootloaders[dirhash](needed, cb);
 }
 
 
@@ -115,8 +229,10 @@ function add_component_css(component) {
   }
   _requested_css[component] = true;
 
-  $get($P._url + component, { q: _versions[component] }, function(res) {
-    inject_css(component, res.css);
+  $P._boot.pkg(component, function(res) {
+    _.each(res, function(cmp, name) {
+      if (cmp) { inject_css(component, cmp.css); }
+    });
   });
 }
 
@@ -132,6 +248,27 @@ function inject_pagelet(id) {
   pEl.innerHTML = payload;
 }
 
+function make_component_class(name, res) {
+  load_requires(res.dirhash, res.requires || [], function() {
+    COMPONENTS[name] = res;
+    if (res.js) {
+      var klass = $P._raw_import(res.js, name);
+      res.exports = klass;
+    }
+
+    if (PENDING[name]) {
+      PENDING[name].forEach(function(cb) {
+        if (cb) {
+          cb(res);
+        }
+      });
+    }
+
+  });
+
+  return res;
+}
+
 function load_component(componentName, cb) {
   if (COMPONENTS[componentName]) {
     cb(COMPONENTS[componentName]);
@@ -144,21 +281,15 @@ function load_component(componentName, cb) {
   }
 
   PENDING[componentName] = [cb];
-  $get($P._url + componentName, { q: _versions[componentName] }, function(res) {
-    _.each(res.defines, function(v, k) { define_raw(k, v); });
 
-    load_requires(componentName, res.requires, function() {
-      var klass = $P._raw_import(res.js, componentName);
-      COMPONENTS[componentName] = res;
-      res.exports = klass;
+  $P._boot.pkg(componentName, function(name, res) {
+    _.each(res, function(cmpName, cmp) {
+      _.each(cmp.defines, function(v, k) { define_raw(k, v); });
 
-      PENDING[componentName].forEach(function(cb) {
-        if (cb) {
-          cb(res);
-        }
-      });
+      make_component_class(cmpName, cmp);
 
     });
+
   });
 
 }
@@ -180,4 +311,9 @@ $P._inject_pagelet = inject_pagelet;
 $P._components = LOADED_COMPONENTS;
 $P._inject_css= inject_css;
 $P._require_css = add_component_css;
+$P._cmps = COMPONENTS;
 
+
+$P._boot = {
+  pkg: register_resource_packager('components', COMPONENTS, make_component_class),
+};

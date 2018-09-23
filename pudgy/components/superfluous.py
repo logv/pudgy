@@ -25,7 +25,8 @@ class SuperfluousComponent(JSComponent, CSSComponent):
     @classmethod
     def get_file_for_ext(cls, ext):
         cname = to_snake_case(cls.__name__)
-        fname = os.path.join(cls.BASE_DIR, cname, "%s.%s" % (cname, ext))
+        cls_dir = cls.get_dir()
+        fname = os.path.join(cls_dir, cname, "%s.%s" % (cname, ext))
         return fname
 
     @classmethod
@@ -40,12 +41,13 @@ class SuperfluousComponent(JSComponent, CSSComponent):
     @classmethod
     def get_events(cls):
         cname = to_snake_case(cls.__name__)
-        with openfile(os.path.join(cls.BASE_DIR, cname, "events.js")) as f:
+        cls_dir = cls.get_dir()
+        with openfile(os.path.join(cls_dir, cname, "events.js")) as f:
             return f.read()
 
     @classmethod
     @memoize
-    def get_package(cls):
+    def get_package_object(cls):
         # in a superfluous package, it is:
         # the_component_name.html.erb for template
         # the_component_name.js for js
@@ -68,7 +70,7 @@ class SuperfluousComponent(JSComponent, CSSComponent):
         # clean up items
         ret = {k: v for k, v in ret.items() if v}
 
-        return flask.jsonify(ret)
+        return ret
 
 
     def __json__(self):

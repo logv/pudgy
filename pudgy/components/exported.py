@@ -30,4 +30,4 @@ from .backbone import BackboneComponent
 from .superfluous import SuperfluousComponent
 from .page import Page, FlaskPage
 
-from .components import Virtual
+from .components import Virtual, get_basedir, get_baseclass

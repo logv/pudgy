@@ -1,5 +1,5 @@
 
-var EventEmitter = require("vendor/EventEmitter");
+var EventEmitter = require("EventEmitter");
 var cmp_events = new EventEmitter();
 
 var LOADED_COMPONENTS = require("common/component_register");
