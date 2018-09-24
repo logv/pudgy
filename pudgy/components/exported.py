@@ -13,7 +13,7 @@ import jinja2
 # FlaskPage: takes template to render as named parameter
 # BigJSPackage: renders the component as one large package instead of a split
 
-from .components import Component, set_base_dir, validate_components
+from .components import Component, CoreComponent, set_base_dir, validate_components
 
 # templating
 from .basic import MustacheComponent, JinjaComponent

@@ -92,8 +92,12 @@ class JSComponent(Activatable, Component):
     def get_js(cls):
         p = cls.get_file_for_ext(cls.JS_LOADER.EXT)
         loader = cls.get_asset_loader(p)
+
+        dirhash_prefix = "require.__dirhash = '%s'" % cls.get_dirhash()
         with openfile(p) as f:
-            return loader.transform(f.read())
+            l = loader.transform(f.read())
+
+        return "%s\n%s" % (dirhash_prefix, l)
 
     @classmethod
     def get_asset_loader(cls, filename):

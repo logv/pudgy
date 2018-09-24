@@ -60,6 +60,7 @@ def make_prelude():
             out.append("// %s" % name)
             out.append(line)
 
+    out.append("require.__dirhash = '%s'" % (components.CoreComponent.get_dirhash()))
     for line in PRELUDE_LINES:
         out.append(line)
 

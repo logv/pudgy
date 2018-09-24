@@ -37,7 +37,10 @@ function render_component(id, cls, context, cb) {
   if (!cmp.$el.hasClass("scoped_" + cls._name)) { cmp.$el.addClass("scoped_" + cls._name); }
   if (!cmp.$el.hasClass(cls._name)) { cmp.$el.addClass(cls._name); }
 
-  if (_.isFunction(cmp.client)) { cmp.client(context); }
+  if (!context.skip_client_init) {
+    if (_.isFunction(cmp.client)) { cmp.client(context); }
+  }
+
   cb && cb(cmp);
 
   return cmp;
@@ -53,7 +56,6 @@ function activate_component(id, name, context, cb) {
       var events = $P._raw_import(m.events, name + "/events");
       m.events_js = events;
       _.extend(m.exports, events);
-      console.log("M", name, m);
       cls.template = _.template(m.template);
 
       util.inject_css("scoped_" + name, m.css);

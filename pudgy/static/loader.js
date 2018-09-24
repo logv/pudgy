@@ -249,11 +249,13 @@ function inject_pagelet(id) {
 }
 
 function make_component_class(name, res) {
+  COMPONENTS[name] = res;
   load_requires(res.dirhash, res.requires || [], function() {
-    COMPONENTS[name] = res;
     if (res.js) {
-      var klass = $P._raw_import(res.js, name);
-      res.exports = klass;
+      if (!res.exports) {
+        var klass = $P._raw_import(res.js, name);
+        res.exports = klass;
+      }
     }
 
     if (PENDING[name]) {
