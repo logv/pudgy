@@ -1,4 +1,4 @@
-from . import components
+from . import components, util
 from .blueprint import simple_component
 
 import os
@@ -31,6 +31,7 @@ def add_to_prelude(name, fname):
 def add_prelude_line(line):
     PRELUDE_LINES.append(line)
 
+@util.memoize
 def make_prelude():
     with open(PRELUDE["pudgy/prelude"]) as f:
         loaderjs = f.read()
@@ -64,7 +65,5 @@ def make_prelude():
 
 
     out.append("require('pudgy/loader')");
-    out.append("require('pudgy/sfprelude')");
-    out.append("require('pudgy/bootloader')");
 
     return "\n".join(out)

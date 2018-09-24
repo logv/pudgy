@@ -4,6 +4,7 @@ import jinja2
 import flask
 import json
 import dotmap
+import base64
 
 # 2/3 python
 try:
@@ -131,7 +132,6 @@ def get_component_package():
 
 @simple_component.route('/csspkg')
 def get_big_css():
-    import base64, json
     components = flask.request.args.getlist('components')
     files = flask.request.args.getlist('static')
 
@@ -214,21 +214,15 @@ def marshal_components(prelude=True):
 
     big_package = []
     big_package.sort(key=lambda w: w.__name__)
-    per_package = []
     for c in css:
         if type(c) == str:
-            found = get_component_by_name(c)
-            if isinstance(found, components.BigCSSPackage) or \
-                    issubclass(found, components.BigCSSPackage):
-                big_package.append(c)
-            else:
-                per_package.append(c)
+            big_package.append(c)
 
 
 
+    cb64 = base64.b64encode(json.dumps(big_package))
     return jinja2.Markup(render_template("inject_components.html",
-        css_package=big_package, css_singles=per_package,
-        postfix=postfix, prelude=prelude, html=html, url_for=dated_url_for,
+        css_package=big_package, postfix=postfix, prelude=prelude, html=html, url_for=dated_url_for,
         versions=json.dumps(component_versions)))
 
 def render_component(name, **kwargs):

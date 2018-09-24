@@ -119,9 +119,9 @@ class JSComponent(Activatable, Component):
 
 
     @classmethod
+    @memoize
     def render_requires(cls, requested, check_intersection=False):
         cls_dir = os.path.join(cls.BASE_DIR, cls.NAMESPACE)
-        print("RENDERING REQUIRES", cls, cls_dir, requested)
         from .components import REQUIRE_RE
 
         def requires_to_js(p, basedir):
@@ -275,6 +275,7 @@ mark_virtual(
 # package definition
 class BigJSPackage(JSComponent):
     @classmethod
+    @memoize
     def get_defines(cls):
         reqs = cls.get_requires()
         return cls.render_requires(reqs)

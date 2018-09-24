@@ -5,7 +5,7 @@ import os
 
 from ..util import memoize, shelve_it
 
-from .components import CoreComponent
+from .components import CoreComponent, Virtual
 from .assets import JSAsset
 from .basic import BigJSPackage, JSComponent
 
@@ -72,6 +72,7 @@ class ReactLoader(CoreComponent, JSComponent):
 JSComponent.alias_requires("react", "vendor/react")
 JSComponent.alias_requires("react-dom", "vendor/react-dom")
 
+@Virtual
 class ReactComponent(bridge.ClientBridge):
     EXCLUDE_JS = set(["react", "react-dom"])
     JS_LOADER=JSXAsset
@@ -124,6 +125,3 @@ class ReactComponent(bridge.ClientBridge):
         """.strip()
 
         self.__activate_str__ = pystache.render(t, self)
-
-from . import components
-components.mark_virtual(ReactComponent, ReactLoader)

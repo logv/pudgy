@@ -110,7 +110,7 @@ class Component(object):
         try:
             pkg = cls.get_package()
         except Exception as e:
-            print("ERROR IN PACKAGE", cls.__name__)
+            print("ERROR IN PACKAGE", cls.__name__, e)
             raise e
 
         return

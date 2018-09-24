@@ -1,5 +1,5 @@
 from .basic import JSComponent, BigJSPackage
-from .components import CoreComponent, mark_virtual
+from .components import CoreComponent, Virtual
 
 import pystache
 
@@ -7,6 +7,7 @@ class BackboneLoader(CoreComponent, BigJSPackage):
     WRAP_COMPONENT = False
 
 JSComponent.alias_requires("backbone", "vendor/backbone")
+@Virtual
 class BackboneComponent(JSComponent):
     @classmethod
     def get_class_dependencies(cls):
@@ -34,4 +35,3 @@ class BackboneComponent(JSComponent):
 
         self.__activate_str__ = pystache.render(t, self)
 
-mark_virtual(BackboneLoader, BackboneComponent)

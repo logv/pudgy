@@ -310,7 +310,13 @@ $P._raw_import = raw_import;
 $P._inject_pagelet = inject_pagelet;
 $P._components = LOADED_COMPONENTS;
 $P._inject_css= inject_css;
-$P._require_css = add_component_css;
+$P._require_css = function(m) {
+  if (_.isArray(m)) {
+    _.each(m, add_component_css);
+  } else {
+    add_component_css(m);
+  }
+}
 $P._cmps = COMPONENTS;
 
 

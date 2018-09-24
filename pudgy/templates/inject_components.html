@@ -5,12 +5,9 @@
 <script type="text/javascript" name="setversions"> $P.set_versions({{ versions | safe }}); </script>
 
 {% if css_package %}
-  <link rel="stylesheet" href="{{ url_for('components.get_big_css', components=css_package) }}" type="text/css"> </link>
+<script type="text/javascript" name="loadcss">$P._require_css({{css_package | safe }}) </script>
 {% endif %}
 
-{% for c in css_singles %}
-<link rel="stylesheet" href="{{ url_for('components.get_css', component=c) }}" type="text/css"> </link>
-{% endfor %}
 {%- if html -%}
 {{ html | safe }}
 {%- endif -%}
