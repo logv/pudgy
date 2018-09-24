@@ -1,6 +1,7 @@
-var _ = require("underscore");
-var reqwest = require("reqwest");
-var EventEmitter = require("EventEmitter");
+var _ = $require("underscore");
+var reqwest = $require("reqwest");
+var EventEmitter = $require("EventEmitter");
+
 
 window._ = _;
 window.reqwest = reqwest;
@@ -156,7 +157,7 @@ var _bootloaders = {};
 function load_requires(dirhash, requires, cb) {
   if (!_bootloaders[dirhash]) {
     _bootloaders[dirhash] = bootload_factory(dirhash, {}, function(name, res) {
-      define_raw(name, res);
+      define_raw(name, res, dirhash);
 
       return res;
     });
@@ -286,7 +287,7 @@ function load_component(componentName, cb) {
 
   $P._boot.pkg(componentName, function(name, res) {
     _.each(res, function(cmpName, cmp) {
-      _.each(cmp.defines, function(v, k) { define_raw(k, v); });
+      _.each(cmp.defines, function(v, k) { define_raw(k, v, cmp.dirhash); });
 
       make_component_class(cmpName, cmp);
 

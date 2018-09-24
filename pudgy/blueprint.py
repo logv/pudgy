@@ -155,16 +155,6 @@ def get_big_css():
 
     abort(404)
 
-@simple_component.route('/<component>/css')
-def get_css(component):
-    found = get_component_by_name(component)
-    if found:
-        r = flask.Response(found.get_css())
-        r.headers["Content-Type"] = "text/css"
-        return r
-
-    abort(404)
-
 @simple_component.route('/<component>')
 def show(component):
     found = get_component_by_name(component)

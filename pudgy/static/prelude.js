@@ -8,18 +8,31 @@ var _modules = {}; // we need to load these from the prelude, technically
 var _defined = {};
 
 var REQUIRE_STUB = "var require = window._make_require_func('";
-var REQUIRE_STUB_END = "');\n";
+var REQUIRE_STUB_END = "'); var $require = _shared_require(require);\n";
 var MODULE_PREFIX="var module = {}; var exports = module.exports = {}; (function() {\n";
 var MODULE_SUFFIX="\n})(); module.exports";
 
 var namespaced_modules = {};
 
+window._shared_require = function(r) {
+  return function(m) {
+    if (_modules[m]) {
+      return _modules[m];
+    }
 
-window._make_require_func = function(base) {
+    return r(m);
+  }
+}
+
+window._make_require_func = function(base, dirhash) {
   var require = function(mod) {
     if (mod[0] == "." && mod[1] == "/") {
       mod = (base + mod.replace(/^.\//, "/"));
     }
+
+    var om = mod;
+
+    mod = ((dirhash||require.__dirhash||"$")+ "::" + mod);
 
     var modules = namespaced_modules[require.__dirhash];
     if (!modules) {
@@ -32,6 +45,8 @@ window._make_require_func = function(base) {
       }
     }
 
+    _modules[om] = modules[mod];
+
 
     return modules[mod];
   };
@@ -40,6 +55,8 @@ window._make_require_func = function(base) {
 }
 
 window.require = _make_require_func('');
+window.$require = _shared_require(require);
+
 
 function raw_import(str, module_name) {
   var toval = "";
@@ -47,7 +64,17 @@ function raw_import(str, module_name) {
     toval = "//# sourceURL=" + module_name + ".js\n";
   }
 
-  var require_stub = REQUIRE_STUB + module_name.trim().replace("'", ) + REQUIRE_STUB_END;
+  var tokens = module_name.trim().split("::");
+  var ns, name;
+  if (tokens.length == 1) {
+    ns = "";
+    name = tokens[0];
+  } else if (tokens.length == 2) {
+    ns = tokens[0];
+    name = tokens[1];
+  }
+
+  var require_stub = REQUIRE_STUB + name.replace("'", ) + "', '" + ns + REQUIRE_STUB_END;
 
   toval += require_stub + MODULE_PREFIX + str + MODULE_SUFFIX;
 
@@ -63,7 +90,9 @@ function raw_import(str, module_name) {
 }
 
 
-window.define_raw = function(name, mod_code) {
+window.define_raw = function(name, mod_code, dirhash) {
+  if (dirhash) { name = dirhash + "::" + name; }
+
   if (!_defined[name]) {
     _defined[name] = mod_code;
   }

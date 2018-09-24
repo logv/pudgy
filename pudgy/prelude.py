@@ -37,8 +37,8 @@ def make_prelude():
         loaderjs = f.read()
 
     out = [ loaderjs ]
-
-
+    dirhash = components.CoreComponent.get_dirhash()
+    out.append("require.__dirhash = '%s'" % (dirhash))
 
     for name in PRELUDE:
         fname = PRELUDE[name]
@@ -49,7 +49,7 @@ def make_prelude():
 
             line = f.read()
             js = json.dumps(line)
-            line = """var _inj = { name: '%s', js: %s }; define_raw(_inj.name, _inj.js); """ % (name, js)
+            line = """var _inj = { name: '%s', dirhash: '%s', js: %s }; define_raw(_inj.name, _inj.js, _inj.dirhash); """ % (name, dirhash, js)
 
             out.append(line)
 
@@ -60,11 +60,10 @@ def make_prelude():
             out.append("// %s" % name)
             out.append(line)
 
-    out.append("require.__dirhash = '%s'" % (components.CoreComponent.get_dirhash()))
     for line in PRELUDE_LINES:
         out.append(line)
 
 
-    out.append("require('pudgy/loader')");
+    out.append("require('pudgy/loader')")
 
     return "\n".join(out)
