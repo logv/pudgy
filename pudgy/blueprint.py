@@ -101,7 +101,7 @@ def build_css_package(files, components):
         found = get_component_by_name(component)
         all.append(found.get_css())
 
-    return all
+    return "\n".join(all)
 
 @simple_component.route('/pkg/<dirhash>')
 def get_requires(dirhash):
@@ -149,7 +149,7 @@ def get_big_css():
 
     all = build_css_package(files, components)
 
-    r = flask.Response("\n".join(all))
+    r = flask.Response(all)
     r.headers["Content-Type"] = "text/css"
     return r
 

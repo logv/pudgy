@@ -30,6 +30,10 @@ class Component(object):
     NAMESPACE = ""
 
     @classmethod
+    def get_dirhash(c):
+        return gethash(os.path.join(c.BASE_DIR, c.NAMESPACE))
+
+    @classmethod
     def set_base_dir(cls, base_dir):
         cls.BASE_DIR = base_dir
 
@@ -145,7 +149,7 @@ class Component(object):
     def get_package(cls):
         ret = cls.get_package_object()
         ret["namespace"] = cls.NAMESPACE
-        ret["dirhash"] = getdirhash(cls)
+        ret["dirhash"] = cls.get_dirhash()
         return flask.jsonify(ret)
 
     def __init__(self, *args, **kwargs):
@@ -241,9 +245,6 @@ CLASSES = defaultdict(dict)
 NAMESPACES = defaultdict(dict)
 COMPONENT_NAMES = {}
 
-def getdirhash(c):
-    return gethash(os.path.join(c.BASE_DIR, c.NAMESPACE))
-
 @memoize
 def validate_components():
     valid = 0
@@ -251,11 +252,11 @@ def validate_components():
     virtual_components = set()
 
     for c in inheritors(Component):
-        base_dir = getdirhash(c)
+        base_dir = c.get_dirhash()
 
         if not base_dir in DIRS and hasattr(c, "render_requires"):
             CLASSES[base_dir] = c
-            DIRS[base_dir] = getdirhash(c)
+            DIRS[base_dir] = base_dir
 
 
         if c.__name__ in VIRTUAL_COMPONENTS:
