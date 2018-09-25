@@ -74,7 +74,7 @@ function raw_import(str, module_name) {
     name = tokens[1];
   }
 
-  var require_stub = REQUIRE_STUB + name.replace("'", ) + "', '" + ns + REQUIRE_STUB_END;
+  var require_stub = REQUIRE_STUB + name.replace("'", "") + "', '" + ns + REQUIRE_STUB_END;
 
   toval += require_stub + MODULE_PREFIX + str + MODULE_SUFFIX;
 
