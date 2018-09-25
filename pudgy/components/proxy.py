@@ -70,9 +70,6 @@ class ComponentProxy(HTMLProxy):
         self.__calls__ = []
         self.__transfer__ = []
 
-    def __json__(self):
-        return { "_H" : self.__html_id__() }
-
     def marshal(self):
         flask.request.pudgy.components.add(self)
 
