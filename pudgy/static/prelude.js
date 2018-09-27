@@ -32,11 +32,13 @@ window._make_require_func = function(base, dirhash) {
 
     var om = mod;
 
-    mod = ((dirhash||require.__dirhash||"$")+ "::" + mod);
+    dirhash = dirhash||require.__dirhash||"$";
 
-    var modules = namespaced_modules[require.__dirhash];
+    mod = (dirhash+ "::" + mod);
+
+    var modules = namespaced_modules[dirhash];
     if (!modules) {
-      modules = namespaced_modules[require.__dirhash] = {};
+      modules = namespaced_modules[dirhash] = {};
     }
 
     if (!modules[mod]) {

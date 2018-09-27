@@ -10,6 +10,7 @@ module.exports = {
   add_invocation: function(cls, fn, args, kwargs) {
     var __kwargs__ = {};
     var __cb__ = function() {};
+    var __bf__ = function() {};
     var __err__ = function(err) {
       console.log("ERROR RUNNING SERVER DIRECTIVE", cls, fn, err);
     };
@@ -35,6 +36,8 @@ module.exports = {
               args: a, kwargs: k, cid: __id__
             }),
             success: function(R) {
+              _.bind(__bf__, that)(R[__id__].response, R[__id__].error);
+
               _.each(R, function(res, tid) {
                 // 1. replace HTML
                 _.each(res.html, function(obj) {
@@ -98,6 +101,15 @@ module.exports = {
       return retfn;
     }
 
+    retfn.ready = function(cb) {
+      __bf__ = cb;
+      return retfn;
+    }
+
+    retfn.before = function(cb) {
+      __bf__ = cb;
+      return retfn;
+    }
 
     retfn.kwargs = function(kwargs) {
       __kwargs__ = kwargs;

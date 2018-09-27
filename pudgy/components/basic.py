@@ -155,7 +155,7 @@ class JSComponent(Activatable, Component):
                 js, jsp = requires_to_js(p, basedir)
 
                 if not js:
-                    ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, cls.__name__)
+                    ret[p] = '$P._missing("%s");' % (p)
                     continue
 
                 ret[p] = js
@@ -178,7 +178,7 @@ class JSComponent(Activatable, Component):
                     ret[p] = js
                     ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
                 else:
-                    ret[p] = 'console.log("MISSING REQUIRE FILE %s FROM %s");' % (p, cls.__name__)
+                    ret[p] = '$P._missing("%s");' % (p)
                     continue
 
 

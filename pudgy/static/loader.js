@@ -165,7 +165,7 @@ function load_requires(dirhash, requires, cb) {
 
   var needed = {};
   _.each(requires, function(r) {
-    if (!_defined[r]) { needed[r] = r; }
+    if (!_defined[r] && !_modules[r]) { needed[r] = r; }
   });
 
 
@@ -309,6 +309,9 @@ var _versions = {};
 $P._load = load_component;
 $P._versions = _versions;
 $P._refs = {};
+$P._missing = function(m) {
+  console.trace("Missing require:", m);
+}
 $P._raw_import = raw_import;
 $P._inject_pagelet = inject_pagelet;
 $P._components = LOADED_COMPONENTS;

@@ -11,6 +11,9 @@ window.$C = function(name, options, cb) {
   });
 }
 
+var EventEmitter = $require("EventEmitter");
+window.SF = new EventEmitter();
+
 function render_component(id, cls, context, cb) {
   // template rendering
   var template_options = _.extend({
