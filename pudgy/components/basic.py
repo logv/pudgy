@@ -213,6 +213,13 @@ class JSComponent(Activatable, Component):
         self.__marshal__()
         return self
 
+    # set a component to not get marshalled to the client. once called, this
+    # can't easily be undone.
+    def nomarshal(self):
+        if self in flask.request.pudgy.components:
+            flask.request.pudgy.components.remove(self)
+        self.__marshalled__ = True
+
 class CSSComponent(Component):
     CSS_LOADER=assets.CssAsset
 
