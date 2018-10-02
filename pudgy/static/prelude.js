@@ -31,6 +31,15 @@ window._make_require_func = function(base, dirhash) {
     }
 
     var om = mod;
+    var ns, tokens;
+
+    if (mod.indexOf("::") != -1) {
+      tokens = mod.split("::");
+      ns = tokens[0];
+      mod = tokens[1];
+      dirhash = $P._namespaces[require.__basehash][ns] || "UNKNOWN";
+    }
+
 
     dirhash = dirhash||require.__dirhash||"$";
 

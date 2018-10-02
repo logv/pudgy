@@ -1,6 +1,10 @@
 {%- if prelude -%}
 <script src="{{ url_for('components.get_prelude') }}" > </script>
 <script> $P._url = "{{ url_for('components.index') }}"; </script>
+
+<script>
+  $P._namespaces = {{ dirhash_lookup | safe }}
+</script>
 {%- endif -%}
 <script type="text/javascript" name="setversions"> $P.set_versions({{ versions | safe }}); </script>
 

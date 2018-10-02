@@ -45,7 +45,8 @@ class AssetLoader(Component):
     @classmethod
     def transform_and_wrap_in_js(cls, js):
         dirhash = cls.get_dirhash()
-        return "require.__dirhash = '%s';\n %s" % (dirhash, cls.transform(js))
+        basehash = cls.get_basehash()
+        return "require.__basehash = '%s'\nrequire.__dirhash = '%s';\n %s" % (basehash, dirhash, cls.transform(js))
 
 class JSAsset(AssetLoader):
     EXT="js"

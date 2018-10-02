@@ -94,10 +94,11 @@ class JSComponent(Activatable, Component):
         loader = cls.get_asset_loader(p)
 
         dirhash_prefix = "require.__dirhash = '%s'" % cls.get_dirhash()
+        basehash_prefix = "require.__basehash = '%s'" % cls.get_basehash()
         with openfile(p) as f:
             l = loader.transform(f.read())
 
-        return "%s\n%s" % (dirhash_prefix, l)
+        return "%s\n%s\n%s" % (dirhash_prefix, basehash_prefix, l)
 
     @classmethod
     def get_asset_loader(cls, filename):

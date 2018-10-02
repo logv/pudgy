@@ -30,6 +30,10 @@ class Component(object):
     NAMESPACE = ""
 
     @classmethod
+    def get_basehash(c):
+        return gethash(c.BASE_DIR)
+
+    @classmethod
     def get_dirhash(c):
         return gethash(os.path.join(c.BASE_DIR, c.NAMESPACE))
 

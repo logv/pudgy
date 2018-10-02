@@ -154,7 +154,7 @@ function register_resource_packager(name, def_dict, postload) {
 
 
 var _bootloaders = {};
-function load_requires(dirhash, requires, cb) {
+function load_requires_for_dirhash(dirhash, requires, cb) {
   if (!_bootloaders[dirhash]) {
     _bootloaders[dirhash] = bootload_factory(dirhash, {}, function(name, res) {
       define_raw(name, res, dirhash);
@@ -168,7 +168,6 @@ function load_requires(dirhash, requires, cb) {
     if (!_defined[r] && !_modules[r]) { needed[r] = r; }
   });
 
-
   if (!_.keys(needed).length) {
     return cb();
   }
@@ -176,6 +175,48 @@ function load_requires(dirhash, requires, cb) {
   _bootloaders[dirhash](needed, cb);
 }
 
+function split_requires(dirhash, requires) {
+  var ret = {};
+  var tokens, ds, m, ns;
+
+  ret[dirhash] = [];
+  _.each(requires, function(r) {
+    if (r.indexOf("::") != -1) {
+      tokens = r.split("::");
+      ns = tokens[0];
+      m = tokens[1];
+
+      // TODO: remove this looping and replace with a
+      // lookup in a dictionary
+      _.each($P._namespaces, function(v, k) {
+        _.each(v, function(hs, name) {
+          if (name == ns) {
+            ds = hs;
+            return;
+          }
+        });
+      });
+
+      ret[ds] = ret[ds] || [];
+      ret[ds].push(m);
+    } else {
+      ret[dirhash].push(r);
+    }
+  });
+
+
+  return ret;
+}
+
+
+function load_requires(dirhash, requires, cb) {
+  var split = split_requires(dirhash, requires);
+  var after = _.after(_.keys(split).length, cb);
+
+  _.each(split, function(requires, ds) {
+    load_requires_for_dirhash(ds, requires, after);
+  });
+}
 
 
 function strip_comment_wrap(str) {

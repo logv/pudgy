@@ -5,6 +5,9 @@ import flask
 import json
 import dotmap
 import base64
+import sass
+
+from collections import defaultdict
 
 # 2/3 python
 try:
@@ -33,6 +36,14 @@ from .components import Component, CSSComponent
 @simple_component.route('/prelude.js')
 def get_prelude():
     return prelude.make_prelude()
+
+def get_component_dirs():
+    all_components = util.inheritors(Component)
+    base_dirs = defaultdict(dict)
+    for c in all_components:
+        base_dirs[c.get_basehash()][c.NAMESPACE] = c.get_dirhash()
+
+    return json.dumps(base_dirs)
 
 def get_component_by_name(component):
     all_components = util.inheritors(Component)
@@ -170,6 +181,7 @@ def add_components():
     flask.request.pudgy.css = set()
     flask.request.pudgy.pagelets = set()
 
+
 def marshal_components(prelude=True):
     from . import components
     # when lc.__html__ is called, __marshal__ is invoked, so we use lc.render()
@@ -211,8 +223,12 @@ def marshal_components(prelude=True):
 
 
     cb64 = base64.b64encode(json.dumps(big_package))
+
+    dirhash_lookup = get_component_dirs()
+
     return jinja2.Markup(render_template("inject_components.html",
-        css_package=big_package, postfix=postfix, prelude=prelude, html=html, url_for=dated_url_for,
+        dirhash_lookup=dirhash_lookup, css_package=big_package,
+        postfix=postfix, prelude=prelude, html=html, url_for=dated_url_for,
         versions=json.dumps(component_versions)))
 
 def render_component(name, **kwargs):
@@ -268,13 +284,26 @@ def compress_request(response):
 
     return response
 
+@simple_component.route('/css/<filename>')
+def get_sass(filename):
+    filename = os.path.normpath(filename)
+    print("FLASK DIR", flask.current_app.static_folder, filename)
+    fname = os.path.join(flask.current_app.static_folder, filename)
+    print("OPENING FNAME", fname)
+    with open(fname) as f:
+        return sass.compile(string=f.read())
+
+def add_stylesheet(filename):
+    t = "<link rel='stylesheet' href='%s' type='text/css' />" % dated_url_for('components.get_sass', filename=filename)
+    return jinja2.Markup(t)
+
 def install(app):
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
 
     app.before_request(add_components)
     app.after_request(inject_components)
-    app.jinja_env.globals.update(CC=render_component)
+    app.jinja_env.globals.update(CC=render_component, add_stylesheet=add_stylesheet)
 
 def register_blueprint(app, component_dir=None):
     app.register_blueprint(simple_component)
