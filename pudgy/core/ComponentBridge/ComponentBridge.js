@@ -124,6 +124,7 @@ module.exports = {
   },
   activate_component: function(id, name, context, display_immediately, ref) {
     util.activate_component(id, name, context, display_immediately, ref, function(d) {
+      if (!display_immediately) { $P._require_css(name); }
       return d;
     });
   }
