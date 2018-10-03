@@ -34,11 +34,14 @@ function render_component(id, cls, context, cb) {
 
 
   var cmp = new cls.superClass(context);
-  var rendered = cls.template(template_options);
-  cmp.$el.html(rendered);
+  if (cls.template) {
+    var rendered = cls.template(template_options);
+    cmp.$el.html(rendered);
 
-  if (!cmp.$el.hasClass("scoped_" + cls._name)) { cmp.$el.addClass("scoped_" + cls._name); }
-  if (!cmp.$el.hasClass(cls._name)) { cmp.$el.addClass(cls._name); }
+    if (!cmp.$el.hasClass("scoped_" + cls._name)) { cmp.$el.addClass("scoped_" + cls._name); }
+    if (!cmp.$el.hasClass(cls._name)) { cmp.$el.addClass(cls._name); }
+  }
+
 
   if (!context.skip_client_init) {
     if (_.isFunction(cmp.client)) { cmp.client(context); }
@@ -59,7 +62,10 @@ function activate_component(id, name, context, cb) {
       var events = $P._raw_import(m.events, name + "/events");
       m.events_js = events;
       _.extend(m.exports, events);
-      cls.template = _.template(m.template);
+
+      if (m.template) {
+        cls.template = _.template(m.template);
+      }
 
       util.inject_css("scoped_" + name, m.css);
       cls.superClass = Backbone.View.extend(m.exports);
