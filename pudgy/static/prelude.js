@@ -122,7 +122,7 @@ $P._raw_import = raw_import;
 $P._addClass = function(cmpEl, name) {
   if (!name) { return; }
   if (!hasClass(cmpEl, name)) {
-    cmpEl.className += name;
+    cmpEl.className += " " + name + " ";
   }
 };
 
