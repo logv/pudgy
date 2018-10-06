@@ -27,11 +27,11 @@ class Page(Activatable, Pipeline):
 
         # after the fact activations, set the body ID and className at the end
         # of the request. this can lead to flash of unstyled content, so prefer
-        # to use FlaskPage and put the class on the body at the start
+        #  to use FlaskPage and put the class on the body at the start
         t = 'document.body.id = "%s";' % (self.__html_id__())
         self.__add_activation__(t)
 
-        t = 'document.body.className += " scoped_%s ";' % (self.__template_name__)
+        t = '$P._addClass(document.body, "scoped_%s");' % (self.__template_name__)
         self.__add_activation__(t)
 
 class FlaskPage(Page, Pipeline):

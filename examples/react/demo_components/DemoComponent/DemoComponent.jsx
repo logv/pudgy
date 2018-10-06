@@ -1,6 +1,6 @@
 import renderer from "./external_renderer.jsx";
 
-var React = require("react");
+var React = $require("react");
 
 module.exports = React.createClass({
   handle_click: function(where) {

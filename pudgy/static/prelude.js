@@ -109,9 +109,21 @@ window.define_raw = function(name, mod_code, dirhash) {
   }
 };
 
+// https://stackoverflow.com/questions/5898656/test-if-an-element-contains-a-class
+function hasClass(element, className) {
+    return (' ' + element.className + ' ').indexOf(' ' + className+ ' ') > -1;
+}
+
 window.$P = {};
 $P._defined = _defined;
 $P._modules = _modules;
 $P._namespaced_modules = namespaced_modules;
 $P._raw_import = raw_import;
+$P._addClass = function(cmpEl, name) {
+  if (!name) { return; }
+  if (!hasClass(cmpEl, name)) {
+    cmpEl.className += name;
+  }
+};
+
 })();
