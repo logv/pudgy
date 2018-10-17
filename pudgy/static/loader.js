@@ -102,7 +102,7 @@ function bootload_factory(type, module_dict, postload) {
 
   };
 
-  var throttled_issue_request = _.throttle(issue_request, 50, { leading: false });
+  var throttled_issue_request = _.throttle(issue_request, 10, { leading: false });
 
   return function bootload(modules, cb) {
     if (_.isString(modules)) {
