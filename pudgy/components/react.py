@@ -1,7 +1,10 @@
+from __future__ import print_function
+
 from . import bridge
 
 import pystache
 import os
+import sys
 
 from ..util import memoize, shelve_it
 
@@ -50,8 +53,8 @@ BABEL_BIN = os.path.expanduser("./node_modules/.bin/babel")
 JSX_COMPILE = get_babel_compiler(presets=["@babel/preset-react"])
 
 if not os.path.exists(BABEL_BIN):
-    print("*** COULDNT FIND BABEL BIN (%s), REACT COMPONENTS WONT COMPILE" % (BABEL_BIN))
-    print("*** Try setting the babel bin with reactcomponent.set_bin('path/to/babel')")
+    print("*** COULDNT FIND BABEL BIN (%s), REACT COMPONENTS WONT COMPILE" % (BABEL_BIN), file=sys.stderr)
+    print("*** Try setting the babel bin with reactcomponent.set_bin('path/to/babel')", file=sys.stderr)
 
     JSX_COMPILE = dukpy_compile
 
