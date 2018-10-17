@@ -164,8 +164,6 @@ def get_big_css():
     r.headers["Content-Type"] = "text/css"
     return r
 
-    abort(404)
-
 @simple_component.route('/<component>')
 def show(component):
     found = get_component_by_name(component)
@@ -303,6 +301,7 @@ def install(app):
 
     app.before_request(add_components)
     app.after_request(inject_components)
+
     app.jinja_env.globals.update(CC=render_component, add_stylesheet=add_stylesheet)
 
 def register_blueprint(app, component_dir=None):

@@ -188,13 +188,20 @@ function split_requires(dirhash, requires) {
 
       // TODO: remove this looping and replace with a
       // lookup in a dictionary
+      var parent;
       _.each($P._namespaces, function(v, k) {
         _.each(v, function(hs, name) {
-          if (name == ns) {
-            ds = hs;
+          if (hs == dirhash) {
+            parent = k;
             return;
           }
         });
+      });
+
+      _.each($P._namespaces[parent], function(hs, name) {
+        if (name == ns) {
+          ds = hs;
+        }
       });
 
       ret[ds] = ret[ds] || [];

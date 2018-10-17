@@ -6,7 +6,6 @@ import time
 import struct
 import zlib
 
-
 # https://stackoverflow.com/questions/44185486/generate-and-stream-compressed-file-with-flask
 def streaming_compress(generator):
     # Yield a gzip file header first.
