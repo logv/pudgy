@@ -165,7 +165,10 @@ function load_requires_for_dirhash(dirhash, requires, cb) {
 
   var needed = {};
   _.each(requires, function(r) {
-    if (!_defined[r] && !_modules[r]) { needed[r] = r; }
+    var fr = r;
+    if (fr.indexOf("::") == -1) { fr = dirhash + "::" + r; }
+
+    if (!_defined[fr]) { needed[r] = r; }
   });
 
   if (!_.keys(needed).length) {
@@ -210,6 +213,7 @@ function split_requires(dirhash, requires) {
       ret[dirhash].push(r);
     }
   });
+
 
 
   return ret;
