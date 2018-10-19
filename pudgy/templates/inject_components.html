@@ -17,3 +17,9 @@
 {%- endif -%}
 {{ postfix }}
 
+{% for act in activations %}
+<script type='text/javascript'>
+  {{ act | safe }}
+</script>
+{% endfor %}
+

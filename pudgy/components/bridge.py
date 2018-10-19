@@ -36,6 +36,7 @@ class ServerBridge(ClientBridge):
     @classmethod
     def get_class_dependencies(cls):
         return [ ComponentBridge ]
+
     @classmethod
     @memoize
     def get_rpc_definitions(cls):

@@ -93,6 +93,8 @@ def invoke(component, fn):
 
     res["__request__"] = {
         "css" : list(flask.request.pudgy.css),
+        # activations is raw javascript to run
+        "activations" : list(flask.request.pudgy.activations)
     }
 
     return flask.jsonify(res)
@@ -178,6 +180,7 @@ def add_components():
     flask.request.pudgy.components = set()
     flask.request.pudgy.css = set()
     flask.request.pudgy.pagelets = set()
+    flask.request.pudgy.activations = []
 
 
 def marshal_components(prelude=True):
@@ -223,9 +226,10 @@ def marshal_components(prelude=True):
     cb64 = base64.b64encode(json.dumps(big_package))
 
     dirhash_lookup = get_component_dirs()
+    activations = flask.request.pudgy.activations
 
     return jinja2.Markup(render_template("inject_components.html",
-        dirhash_lookup=dirhash_lookup, css_package=big_package,
+        dirhash_lookup=dirhash_lookup, css_package=big_package, activations=activations,
         postfix=postfix, prelude=prelude, html=html, url_for=dated_url_for,
         versions=json.dumps(component_versions)))
 
