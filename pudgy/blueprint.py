@@ -289,9 +289,7 @@ def compress_request(response):
 @simple_component.route('/css/<filename>')
 def get_sass(filename):
     filename = os.path.normpath(filename)
-    print("FLASK DIR", flask.current_app.static_folder, filename)
     fname = os.path.join(flask.current_app.static_folder, filename)
-    print("OPENING FNAME", fname)
     with open(fname) as f:
         return sass.compile(string=f.read())
 
