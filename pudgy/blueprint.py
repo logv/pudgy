@@ -3,7 +3,7 @@ from __future__ import print_function
 import jinja2
 import flask
 import json
-import dotmap
+import addict
 import base64
 import sass
 
@@ -176,7 +176,7 @@ def show(component):
     abort(404)
 
 def add_components():
-    flask.request.pudgy = dotmap.DotMap()
+    flask.request.pudgy = addict.Dict()
     flask.request.pudgy.components = set()
     flask.request.pudgy.css = set()
     flask.request.pudgy.pagelets = set()

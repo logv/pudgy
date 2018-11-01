@@ -86,7 +86,7 @@ class Pipeline(Component):
         import preparable
         from ..blueprint import marshal_components
 
-        kwargs = self.context.toDict()
+        kwargs = self.context
         r = self.render()
 
         yield r

@@ -1,5 +1,5 @@
 flask
 pystache
 libsass
-dotmap
+addict
 diskcache

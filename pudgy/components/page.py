@@ -110,7 +110,7 @@ class FlaskPage(Page, Pipeline):
         self.__prepare__()
 
         flask.request.pudgy.components.add(self)
-        kwargs = self.context.toDict()
+        kwargs = self.context
 
         if RAPID_PUDGY_KEY in os.environ:
             template_dir = os.path.join(flask.current_app.root_path, flask.current_app.template_folder)

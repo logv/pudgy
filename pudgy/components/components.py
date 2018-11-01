@@ -2,7 +2,7 @@ from __future__ import division, print_function
 
 
 import pystache
-import dotmap
+import addict
 import jinja2
 import flask
 import json
@@ -157,7 +157,7 @@ class Component(object):
         return flask.jsonify(ret)
 
     def __init__(self, *args, **kwargs):
-        self.context = dotmap.DotMap(kwargs)
+        self.context = addict.Dict(kwargs)
         self.__template_name__ = str(self.__class__.__name__)
         self.__async__ = False
         self.__hash__ = getrandhash(self)[:10]
@@ -190,7 +190,7 @@ class Component(object):
 
 
     def __context__(self):
-        return json.dumps(self.client.toDict(), default=dump_values)
+        return json.dumps(self.client, default=dump_values)
 
     # should we wait for any CSS before revealing the component
     def __display_immediately__(self):

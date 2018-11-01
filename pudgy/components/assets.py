@@ -4,7 +4,7 @@ from . import proxy
 from .. import util
 
 import flask
-import dotmap
+import addict
 import json
 
 class AssetLoader(Component):

@@ -6,7 +6,7 @@ from . import proxy
 from .. import util
 
 import flask
-import dotmap
+import addict
 
 from . import assets
 
@@ -79,7 +79,7 @@ class JinjaComponent(Component):
 
     def __render__(self):
         template_str = self.get_template()
-        return flask.render_template_string(template_str, **(self.context.toDict()))
+        return flask.render_template_string(template_str, **(self.context))
 
 class JSComponent(Activatable, Component):
     JS_LOADER=assets.JSAsset
@@ -190,7 +190,7 @@ class JSComponent(Activatable, Component):
 
     def __init__(self, *args, **kwargs):
         self.__marshalled__ = False
-        self.client = dotmap.DotMap()
+        self.client = addict.Dict()
         super(JSComponent, self).__init__(*args, **kwargs)
 
     def __marshal__(self):
