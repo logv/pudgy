@@ -97,7 +97,11 @@ def invoke(component, fn):
         "activations" : list(flask.request.pudgy.activations)
     }
 
-    return flask.jsonify(res)
+    current_app = flask.current_app
+
+    return current_app.response_class(
+        json.dumps(res, default=components.components.dump_values) + '\n',
+        mimetype=current_app.config['JSONIFY_MIMETYPE'])
 
 
 @memoize
