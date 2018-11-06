@@ -84,6 +84,11 @@ register_marshaller('Backbone', function(d) {
   if (typeof Backbone != "undefined") {
     if (d instanceof Backbone.View) { return { "_B" : d.id, "_C": d._type }; }
   }
+
+  // if we have a cid and $el, it looks like a backbone component
+  if (d.cid && d.$el) {
+    return { "_B" : d.id, "_C": d._type };
+  }
 });
 
 register_marshaller('React', function(d) {
