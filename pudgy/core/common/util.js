@@ -87,7 +87,8 @@ register_marshaller('Backbone', function(d) {
 });
 
 register_marshaller('React', function(d) {
-  if (d._type) { return { "_R" : d.id, "_C" : d._type }; }
+  // ReactLoader sets __react_type
+  if (d.__react_type) { return { "_R" : d.id, "_C" : d._type }; }
 });
 
 register_unmarshaller('HTMLElement', function(d) {

@@ -30,6 +30,7 @@ module.exports = {
         var ren = ReactDOM.render(rEl, el);
         ren.id = id;
         ren.__bridge = bridge;
+        ren.__react_type = true
 
         return ren;
       });
