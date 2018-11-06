@@ -18,7 +18,15 @@ VIRTUAL_COMPONENTS = set()
 from ..util import memoize, getrandhash, inheritors, gethash
 from collections import defaultdict
 
+
+import datetime
+def epoch(d):
+    return (d - datetime.datetime(1970, 1, 1)).total_seconds()
+
 def dump_values(w):
+    if isinstance(w, datetime.datetime):
+        return epoch(w) * 1000 # javascript defaults to ms since epoch
+
     if w:
         return w.__json__()
 
