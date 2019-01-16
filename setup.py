@@ -22,7 +22,7 @@ setup(
         "flask",
         "pystache",
         "libsass",
-        "dotmap",
+        "addict",
         "diskcache"
     ],
     )
