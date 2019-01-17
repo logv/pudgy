@@ -54,6 +54,7 @@ def memoize(func):
         cache[cache_key] = ret
         return ret
 
+    new_func.clear_cache = lambda: cache.clear()
     return new_func
 
 def gethash(v):
