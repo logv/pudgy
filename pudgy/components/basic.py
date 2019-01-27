@@ -81,6 +81,23 @@ class JinjaComponent(Component):
         template_str = self.get_template()
         return flask.render_template_string(template_str, **(self.context))
 
+def replace_shortcuts(l):
+    lines = l.split("\n")
+
+    all_lines = []
+    for line in lines:
+        ms = REQUIRE_RE.findall(line)
+        for m in ms:
+            if m.find("$") != -1:
+                mod, r = m.split("$")
+                hsh = get_dirhash_alias(mod)
+                line = line.replace(m, "%s$%s" % (hsh,r))
+
+        all_lines.append(line)
+
+    return "\n".join(all_lines)
+
+
 class JSComponent(Activatable, Component):
     JS_LOADER=assets.JSAsset
     EXCLUDE_JS = set()
@@ -98,6 +115,7 @@ class JSComponent(Activatable, Component):
         with openfile(p) as f:
             l = loader.transform(f.read())
 
+        l = replace_shortcuts(l)
         return "%s\n%s\n%s" % (dirhash_prefix, basehash_prefix, l)
 
     @classmethod

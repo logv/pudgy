@@ -1,9 +1,12 @@
 import pudgy
 from ..demo_base import DemoDir
 
+
 class DemoPage(DemoDir, pudgy.ServerBridge, pudgy.FlaskPage,
     pudgy.BackboneComponent):
     pass
+
+pudgy.components.add_dirhash_alias("basic_demo", DemoPage)
 
 @DemoPage.api
 def server_call(self, component=None):

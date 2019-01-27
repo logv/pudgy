@@ -253,6 +253,7 @@ def set_base_dir(d):
 # we want to create a lookup from
 # (hash(BASE_DIR), namespace) -> actual component dir
 DIRS = {}
+SHORTCUTS = {}
 CLASSES = defaultdict(dict)
 NAMESPACES = defaultdict(dict)
 COMPONENT_NAMES = {}
@@ -313,6 +314,13 @@ def get_basedir(dirhash):
 
 def get_baseclass(dirhash):
     return CLASSES[dirhash]
+
+def get_dirhash_alias(modulename):
+    return SHORTCUTS[modulename]
+
+def add_dirhash_alias(modulename, cls):
+    SHORTCUTS[modulename] = cls.get_dirhash()
+
 
 def Virtual(cls):
     mark_virtual(cls)

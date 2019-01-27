@@ -209,6 +209,12 @@ function split_requires(dirhash, requires) {
 
       ret[ds] = ret[ds] || [];
       ret[ds].push(m);
+    } else if (r.indexOf("$") != -1) {
+      tokens = r.split("$");
+      ds = tokens[0];
+      m = tokens[1];
+      ret[ds] = ret[ds] || [];
+      ret[ds].push(m);
     } else {
       ret[dirhash].push(r);
     }
