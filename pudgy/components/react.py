@@ -50,14 +50,9 @@ def dukpy_compile(data, fname='???'):
     return dukpy.jsx_compile(data)
 
 BABEL_BIN = os.path.expanduser("./node_modules/.bin/babel")
-JSX_COMPILE = get_babel_compiler(presets=["@babel/preset-react"])
+#JSX_COMPILE = get_babel_compiler(presets=["@babel/preset-react"])
 
-if not os.path.exists(BABEL_BIN):
-    print("*** COULDNT FIND BABEL BIN (%s), REACT COMPONENTS WONT COMPILE" % (BABEL_BIN), file=sys.stderr)
-    print("*** Try setting the babel bin with reactcomponent.set_bin('path/to/babel')", file=sys.stderr)
-
-    JSX_COMPILE = dukpy_compile
-
+JSX_COMPILE = dukpy_compile
 
 class JSXAsset(JSAsset):
     EXT="jsx"

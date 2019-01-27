@@ -253,6 +253,7 @@ def inject_components(response):
 
 @simple_component.before_app_first_request
 def install_pudgy():
+    print(" * Pudgy component dir is", Component.BASE_DIR)
     components.validate_components()
 
 
@@ -320,5 +321,4 @@ def register_blueprint(app, component_dir=None):
 
 
     base_dir = os.path.abspath(component_dir)
-    print(" * Pudgy component dir is", base_dir)
     Component.set_base_dir(base_dir)
