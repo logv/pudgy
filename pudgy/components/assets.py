@@ -78,7 +78,19 @@ class CssAsset(AssetLoader):
         """ % json.dumps({ "css": css, "scope": scope })
 
     @classmethod
+    def get_definitions(cls):
+        static_folder = flask.current_app.static_folder
+        try:
+            with open(os.path.join(static_folder, "definitions.sass")) as f:
+                return f.read()
+        except:
+            return ""
+
+    @classmethod
     def transform(cls, css, scope=""):
+        d = cls.get_definitions()
+
+        css = "%s\n%s" % (d, css)
         if scope:
             return sass.compile(string=".%s { %s }" % (scope, css))
 
