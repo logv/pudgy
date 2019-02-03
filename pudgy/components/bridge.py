@@ -1,11 +1,11 @@
 from .components import *
 
 from .proxy import Proxy, ComponentProxy, HTMLProxy
-from .basic import MustacheComponent, BigJSPackage, JSComponent
+from .basic import MustacheComponent, JSComponent
 
 import flask
 
-class ComponentBridge(CoreComponent, MustacheComponent, BigJSPackage):
+class ComponentBridge(CoreComponent, MustacheComponent, JSComponent):
     WRAP_COMPONENT = False
 
 

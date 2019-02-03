@@ -153,6 +153,10 @@ class Component(object):
         ret["requires"] = r
         ret["defines"] = d
 
+        if hasattr(cls, 'get_require_versions'):
+            v = cls.get_require_versions()
+            ret["__versions__"] = v
+
         # clean up items
         ret = {k: v for k, v in ret.items() if v}
         return ret

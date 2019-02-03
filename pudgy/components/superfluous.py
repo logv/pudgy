@@ -1,4 +1,4 @@
-from .basic import JSComponent, CSSComponent, BigJSPackage, openfile
+from .basic import JSComponent, CSSComponent, openfile
 from .components import CoreComponent, Virtual
 
 import pystache
@@ -10,7 +10,7 @@ from ..util import memoize
 
 JSComponent.alias_requires("backbone", "vendor/backbone")
 
-class SuperfluousLoader(CoreComponent, BigJSPackage):
+class SuperfluousLoader(CoreComponent, JSComponent):
     WRAP_COMPONENT = False
 
 # https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
@@ -66,6 +66,7 @@ class SuperfluousComponent(JSComponent, CSSComponent):
         ret["requires"] = cls.get_requires()
         ret["defines"] = cls.get_defines()
         ret["events"] = cls.get_events()
+        ret["__versions__"] = cls.get_require_versions()
 
         # clean up items
         ret = {k: v for k, v in ret.items() if v}

@@ -5,7 +5,16 @@ if (window.$P) {
 }
 
 var _modules = {}; // we need to load these from the prelude, technically
-var _defined = {};
+var _defined = {}; // mapping of modules -> code
+var _stored  = {}; // modules that are stored in localStorage
+var _last_used = {};
+var LAST_USED_KEY = "__last_used__";
+
+try {
+  _last_used = JSON.parse(localStorage.getItem(LAST_USED_KEY) || "{}");
+} catch(e) {
+  _last_used = {};
+}
 
 var REQUIRE_STUB = "var require = window._make_require_func('";
 var REQUIRE_STUB_END = "'); var $require = _shared_require(require);\n";
@@ -107,12 +116,39 @@ function raw_import(str, module_name) {
 }
 
 
+function get_storage_key(v) {
+  return "$V::" + v;
+}
+
 window.define_raw = function(name, mod_code, dirhash) {
+  if (typeof mod_code != "string") {
+    return;
+  }
+
+  var oname = name;
   if (dirhash) { name = dirhash + "::" + name; }
 
   if (!_defined[name]) {
     _defined[name] = mod_code;
+    var md5 = require('md5');
+
+    if (window.localStorage && md5 && mod_code && !_stored[name]) {
+      try {
+        var v = md5(mod_code.trim());
+        var vk = get_storage_key(v);
+        if (!localStorage.getItem(vk)) {
+          localStorage.setItem(vk, mod_code);
+          _last_used[vk] = +new Date();
+
+          window.save_last_used && save_last_used();
+        }
+      } catch (e) {
+        console.log("EXC", e);
+
+      }
+    }
   }
+
 };
 
 // https://stackoverflow.com/questions/5898656/test-if-an-element-contains-a-class
@@ -131,5 +167,6 @@ $P._addClass = function(cmpEl, name) {
     cmpEl.className += " " + name + " ";
   }
 };
+
 
 })();

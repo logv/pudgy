@@ -36,9 +36,15 @@ module.exports = {
               args: a, kwargs: k, cid: __id__
             }),
             success: function(R) {
+              $P.set_versions(R["__versions__"]);
+
               _.bind(__bf__, that)(R[__id__].response, R[__id__].error);
 
               _.each(R, function(res, tid) {
+                if (tid == "__versions__") {
+                  return;
+                }
+
                 // 1. replace HTML
                 _.each(res.html, function(obj) {
                   var fn = obj[0];

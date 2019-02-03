@@ -11,8 +11,9 @@ PRELUDE = {
     "underscore"           : d("vendor/underscore-min.js"),
     "reqwest"              : d("vendor/reqwest.min.js"),
     "EventEmitter"         : d("vendor/EventEmitter.js"),
+    "md5"                  : d("vendor/md5.js"),
     "pudgy/prelude"        : d("prelude.js"),
-    "pudgy/loader"         : d("loader.js"),
+    "pudgy/loader"         : d("loader.js")
 }
 
 PRELUDE_RAW = {
@@ -22,8 +23,9 @@ PRELUDE_RAW = {
 PRELUDE_LINES = []
 
 def use_jquery():
-    PRELUDE["jquery"] = d("vendor/jquery-3.3.1.min.js")
-    add_prelude_line("window.jQuery = require('jquery')")
+    if not "jquery" in PRELUDE:
+        PRELUDE["jquery"] = d("vendor/jquery-3.3.1.min.js")
+        add_prelude_line("window.jQuery = require('jquery')")
 
 def add_to_prelude(name, fname):
     PRELUDE[name] = fname

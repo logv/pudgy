@@ -24,6 +24,8 @@ simple_component = Blueprint('components', __name__,
 
 from . import prelude, util, components
 
+proxy = components.proxy
+
 components.set_base_dir(simple_component.root_path)
 
 import os
@@ -33,9 +35,17 @@ from .util import memoize, dated_url_for
 from .components import Component, CSSComponent
 
 
+SECONDS_IN_DAY = 60 * 60 * 24 * 7
+
+def add_caching(r):
+    r.cache_control.max_age = 365 * SECONDS_IN_DAY
+    r.cache_control.public = True
+    return r
+
 @simple_component.route('/prelude.js')
 def get_prelude():
-    return prelude.make_prelude()
+    r = flask.Response(prelude.make_prelude())
+    return add_caching(r)
 
 def get_component_dirs():
     all_components = util.inheritors(Component)
@@ -91,11 +101,15 @@ def invoke(component, fn):
     for p in flask.request.pudgy.components:
         res[p.__html_id__()] = p.__ajax_object__()
 
+    versions = calc_versions(flask.request.pudgy.components)
+
     res["__request__"] = {
         "css" : list(flask.request.pudgy.css),
         # activations is raw javascript to run
         "activations" : list(flask.request.pudgy.activations)
     }
+
+    res["__versions__"] = versions
 
     current_app = flask.current_app
 
@@ -139,12 +153,15 @@ def get_component_package():
     cs = json.loads(d)
 
     ret = {}
+    versions = {}
     for c in cs:
         found = get_component_by_name(c)
         if found:
             ret[c] = found.get_package_object()
+            versions[c] = util.gethash(json.dumps(ret[c]))
 
 
+    ret["__versions__"] = versions
     return flask.jsonify(ret)
 
 @simple_component.route('/csspkg')
@@ -168,7 +185,7 @@ def get_big_css():
 
     r = flask.Response(all)
     r.headers["Content-Type"] = "text/css"
-    return r
+    return add_caching(r)
 
 @simple_component.route('/<component>')
 def show(component):
@@ -187,6 +204,30 @@ def add_components():
     flask.request.pudgy.activations = []
 
 
+def calc_versions(components, version_dict=None):
+    if not version_dict:
+        version_dict = defaultdict(dict)
+
+    for c in components:
+        # component proxy means the component is already on the page
+        if isinstance(c, (proxy.ComponentProxy)):
+            continue
+
+
+        if c.__marshalled__:
+            dirhash = c.get_dirhash()
+            version_dict[dirhash][c.get_class()] = "%s" % c.get_version()
+
+            reqs = c.get_require_versions()
+            for k in reqs:
+                version_dict[dirhash][k] = reqs[k]
+
+            for d in c.get_class_dependencies():
+                dirhash = d.get_dirhash()
+                version_dict[dirhash][d.get_class()] = "%s" % d.get_version()
+
+    return version_dict
+
 def marshal_components(prelude=True):
     from . import components
     # when lc.__html__ is called, __marshal__ is invoked, so we use lc.render()
@@ -196,21 +237,15 @@ def marshal_components(prelude=True):
     flask.request.pudgy.components = set()
     html = lc.render()
 
-    # TODO: dont send same component version down multiple times
-    component_versions = {}
-    component_dirhashes = {}
+    version_dict = calc_versions(lc.context.components)
+    calc_versions([lc], version_dict)
     for c in lc.context.components:
-        if c.__marshalled__:
-            component_versions[c.get_class()] = "%s" % c.get_version()
-            component_dirhashes[c.get_class()] = util.gethash(c.BASE_DIR)
-            if c.get_class() in flask.request.pudgy.css:
-                flask.request.pudgy.css.remove(c.get_class())
+        # dont bother double sending CSS
+        if c.get_class() in flask.request.pudgy.css:
+            flask.request.pudgy.css.remove(c.get_class())
 
-            for d in c.get_class_dependencies():
-                component_versions[d.get_class()] = "%s" % d.get_version()
-                component_dirhashes[d.get_class()] = util.gethash(d.BASE_DIR)
 
-    component_versions[lc.get_class()] = lc.get_version()
+
 
     postfix = ""
     if flask.request.pudgy.components:
@@ -235,7 +270,7 @@ def marshal_components(prelude=True):
     return jinja2.Markup(render_template("inject_components.html",
         dirhash_lookup=dirhash_lookup, css_package=big_package, activations=activations,
         postfix=postfix, prelude=prelude, html=html, url_for=dated_url_for,
-        versions=json.dumps(component_versions)))
+        versions=json.dumps(version_dict)))
 
 def render_component(name, **kwargs):
     found = get_component_by_name(name)

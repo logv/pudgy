@@ -43,7 +43,7 @@ class Activatable(object):
 
     def __init__(self, *args, **kwargs):
         self.__activate_str__ = ""
-        self.__activations__ = []
+        self.__activations__ = [ ]
         super(Activatable, self).__init__(*args, **kwargs)
 
     def __add_activation__(self, jscode):
@@ -143,6 +143,20 @@ class JSComponent(Activatable, Component):
 
     @classmethod
     @memoize
+    def get_require_versions(cls):
+        reqs = cls.get_requires()
+        rendered = cls.render_requires(reqs)
+        ret = {}
+        for k in rendered:
+            if k == "__versions__":
+                continue
+
+            ret[k] = util.gethash(rendered[k].strip())
+        return ret
+
+
+    @classmethod
+    @memoize
     def render_requires(cls, requested, check_intersection=False):
         cls_dir = os.path.join(cls.BASE_DIR, cls.NAMESPACE)
         from .components import REQUIRE_RE
@@ -200,8 +214,11 @@ class JSComponent(Activatable, Component):
                     ret[p] = '$P._missing("%s");' % (p)
                     continue
 
+            versions = {}
+            for p in ret:
+                versions[p] = util.gethash(ret[p])
 
-
+            ret["__versions__"] = versions
             return ret
 
         return render_requires(cls, cls.__name__)

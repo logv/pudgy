@@ -75,11 +75,12 @@ function bootload_factory(type, module_dict, postload) {
       if (module_dict) {
         _.each(data, function(v, k) {
 
-          v.module = k;
-
           if (postload) {
             v = postload(k, v);
           }
+
+          v.module = k;
+
 
           module_dict[k] = v;
         });
@@ -154,6 +155,59 @@ function register_resource_packager(name, def_dict, postload) {
 
 
 var _bootloaders = {};
+
+function get_storage_key(v) {
+  return "$V::" + v;
+}
+
+function check_local_storage(dirhash, req, def) {
+  var version = _versions[dirhash][req];
+  if (!window.localStorage) {
+    return;
+  }
+  var vk = get_storage_key(version);
+  var r = localStorage.getItem(vk);
+  if (r) {
+    _defined[def] = r;
+    _defined[req] = r;
+    _stored[dirhash+"::"+req] = true;
+    _last_used[vk] = +new Date();
+    save_last_used();
+  }
+}
+
+setTimeout(clean_local_storage, 5000);
+function clean_local_storage() {
+  if (!window.localStorage) {
+    return;
+  }
+
+  debug("CLEANING LOCAL STORAGE");
+
+  var now = +new Date();
+  var day_in_ms = 1000 * 60 * 60 * 24;
+
+  var keys = _.keys(localStorage).concat(_.keys(_last_used));
+  _.each(keys, function(k) {
+    if (!k.startsWith("$V::")) {
+      return;
+    }
+
+    var seen = _last_used[k];
+    var delta = now - seen;
+    if (isNaN(delta) || (delta / day_in_ms > 7)) {
+      localStorage.removeItem(k);
+      delete _last_used[k];
+    }
+  });
+}
+
+window.save_last_used = _.debounce(function() {
+  try {
+    localStorage.setItem(LAST_USED_KEY, JSON.stringify(_last_used));
+  } catch(e) { console.log("EXC", e)}
+}, 1000);
+
 function load_requires_for_dirhash(dirhash, requires, cb) {
   if (!_bootloaders[dirhash]) {
     _bootloaders[dirhash] = bootload_factory(dirhash, {}, function(name, res) {
@@ -167,6 +221,8 @@ function load_requires_for_dirhash(dirhash, requires, cb) {
   _.each(requires, function(r) {
     var fr = r;
     if (fr.indexOf("::") == -1) { fr = dirhash + "::" + r; }
+
+    check_local_storage(dirhash, r, fr);
 
     if (!_defined[fr]) { needed[r] = r; }
   });
@@ -307,9 +363,32 @@ function inject_pagelet(id) {
   pEl.innerHTML = payload;
 }
 
+function setup_component_versions(dirhash, versions) {
+  var ret = {};
+  ret[dirhash] = {};
+
+  _.each(versions, function(v, k) {
+    if (k.indexOf("$") == -1) {
+      ret[dirhash][k] = v;
+    } else {
+      var tokens = k.split("$");
+      var d = tokens[0];
+      var r = tokens[1];
+      ret[d] = ret[d] || {};
+      ret[d][r] = v;
+    }
+  });
+
+  $P.set_versions(ret);
+}
+
 function make_component_class(name, res) {
   COMPONENTS[name] = res;
-  load_requires(res.dirhash, res.requires || [], function() {
+
+  // define the versions that come with this component
+  setup_component_versions(res.dirhash, res.__versions__);
+
+  load_requires(res.dirhash, _.keys(res.__versions__) || [], function() {
     if (res.js) {
       if (!res.exports) {
         var klass = $P._raw_import(res.js, name);
@@ -345,8 +424,9 @@ function load_component(componentName, cb) {
 
   $P._boot.pkg(componentName, function(name, res) {
     _.each(res, function(cmpName, cmp) {
-      _.each(cmp.defines, function(v, k) { define_raw(k, v, cmp.dirhash); });
-
+      _.each(cmp.defines, function(v, k) {
+        define_raw(k, v, cmp.dirhash);
+      });
       make_component_class(cmpName, cmp);
 
     });
@@ -357,9 +437,8 @@ function load_component(componentName, cb) {
 
 $P.set_versions = function(versions) {
   _.each(versions, function(v, k) {
-    _versions[k] = v;
+    _versions[k] = _.extend(_versions[k] || {}, v);
   });
-  debug("VERSIONS", _versions);
 };
 
 window.$P = _.extend($P, window.$P || {});

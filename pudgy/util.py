@@ -59,7 +59,7 @@ def memoize(func):
 
 def gethash(v):
     m = hashlib.md5()
-    h = str(hash(v)).encode("utf-8")
+    h = str(v).strip().encode("utf-8")
 
     m.update(h)
 

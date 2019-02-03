@@ -1,9 +1,9 @@
-from .basic import JSComponent, BigJSPackage
+from .basic import JSComponent
 from .components import CoreComponent, Virtual
 
 import pystache
 
-class BackboneLoader(CoreComponent, BigJSPackage):
+class BackboneLoader(CoreComponent, JSComponent):
     WRAP_COMPONENT = False
 
 JSComponent.alias_requires("backbone", "vendor/backbone")
