@@ -10,6 +10,7 @@ import sass
 import os
 import re
 import hashlib
+import inspect
 
 
 REQUIRE_RE = re.compile("""require\(['"](.*?)['"]\)""")
@@ -277,8 +278,13 @@ def validate_components():
         else:
             # TODO: allow multiple components to have the same name
             if c.__name__ in COMPONENT_NAMES:
-                raise Exception("Declared %s but it is redefining %s from %s" %
-                    (c, c.__name__, COMPONENT_NAMES[c.__name__]))
+                f1 = inspect.getfile(c)
+                f2 = inspect.getfile(COMPONENT_NAMES[c.__name__])
+
+                if f1 != f2:
+                    print(f1, f2)
+                    raise Exception("Declared %s but it is redefining %s from %s" %
+                        (c, c.__name__, COMPONENT_NAMES[c.__name__]))
             else:
                 COMPONENT_NAMES[c.__name__] = c
 
