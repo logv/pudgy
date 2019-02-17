@@ -44,7 +44,6 @@ window._make_require_func = function(base, dirhash) {
       mod = tokens[1];
     }
 
-
     dirhash = dirhash||require.__dirhash||"$";
 
     mod = (dirhash+ "::" + mod);
@@ -59,6 +58,8 @@ window._make_require_func = function(base, dirhash) {
         modules[mod] = raw_import(_defined[mod], mod);
       }
     }
+
+
 
     _modules[om] = modules[mod];
 

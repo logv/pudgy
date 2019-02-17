@@ -59,7 +59,7 @@ class CssAsset(AssetLoader):
     def scopename(cls, css):
         import hashlib
         m = hashlib.md5()
-        m.update(css)
+        m.update(css.encode("utf-8"))
 
         hashed = m.hexdigest()[:8]
 

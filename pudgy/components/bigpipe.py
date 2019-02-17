@@ -9,19 +9,25 @@ import zlib
 # https://stackoverflow.com/questions/44185486/generate-and-stream-compressed-file-with-flask
 def streaming_compress(generator):
     # Yield a gzip file header first.
+    try:
+        inttype = long
+    except:
+        inttype = int
+
     yield (
-        '\037\213\010\000' + # Gzip file, deflate, no filename
-        struct.pack('<L', long(time.time())) +  # compression start time
-        '\002\377'  # maximum compression, no OS specified
+        b'\037\213\010\000' + # Gzip file, deflate, no filename
+        struct.pack('<L', inttype(time.time())) +  # compression start time
+        b'\002\377'  # maximum compression, no OS specified
     )
 
     # bookkeeping: the compression state, running CRC and total length
     compressor = zlib.compressobj(
         9, zlib.DEFLATED, -zlib.MAX_WBITS, zlib.DEF_MEM_LEVEL, 0)
-    crc = zlib.crc32("")
+    crc = zlib.crc32(b"")
     length = 0
 
     for data in generator:
+        data = data.encode("utf-8")
         chunk = compressor.compress(data)
         if chunk:
             yield chunk

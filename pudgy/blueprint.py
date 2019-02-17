@@ -227,7 +227,7 @@ def marshal_components(prelude=True):
 
 
 
-    cb64 = base64.b64encode(json.dumps(big_package))
+    cb64 = base64.b64encode(json.dumps(big_package).encode("utf-8"))
 
     dirhash_lookup = get_component_dirs()
     activations = flask.request.pudgy.activations
