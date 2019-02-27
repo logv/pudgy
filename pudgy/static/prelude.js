@@ -24,14 +24,14 @@ window._shared_require = function(r) {
   }
 }
 
-window._make_require_func = function(base, dirhash) {
+window._make_require_func = function(base, basehash) {
   var require = function(mod) {
     if (mod[0] == "." && mod[1] == "/") {
       mod = (base + mod.replace(/^.\//, "/"));
     }
 
     var om = mod;
-    var ns, tokens;
+    var ns, tokens, dirhash;
 
     if (mod.indexOf("::") != -1) {
       tokens = mod.split("::");
@@ -42,7 +42,10 @@ window._make_require_func = function(base, dirhash) {
       tokens = mod.split("$");
       dirhash = tokens[0];
       mod = tokens[1];
+    } else {
+      dirhash = basehash;
     }
+
 
     dirhash = dirhash||require.__dirhash||"$";
 
@@ -58,8 +61,6 @@ window._make_require_func = function(base, dirhash) {
         modules[mod] = raw_import(_defined[mod], mod);
       }
     }
-
-
 
     _modules[om] = modules[mod];
 
