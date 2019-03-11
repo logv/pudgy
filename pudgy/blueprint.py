@@ -35,11 +35,14 @@ from .util import memoize, dated_url_for
 from .components import Component, CSSComponent
 
 
-SECONDS_IN_DAY = 60 * 60 * 24 * 7
 
+from datetime import datetime, timedelta
 def add_caching(r):
-    r.cache_control.max_age = 365 * SECONDS_IN_DAY
-    r.cache_control.public = True
+    hours = 24 * 30
+    then = datetime.now() + timedelta(hours=hours)
+    r.headers.add('Cache-Control', 'public,max-age=%d' % int(3600 * hours))
+    r.headers.add('Expires', then.strftime("%a, %d %b %Y %H:%M:%S GMT"))
+
     return r
 
 @simple_component.route('/prelude.js')

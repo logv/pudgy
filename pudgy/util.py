@@ -100,15 +100,15 @@ def dated_url_for(endpoint, **values):
     # we use python string hashing
     if endpoint == 'components.get_prelude':
         res = handle_request_to(endpoint, **values)
-        hsh = hash(res)
+        hsh = gethash(res)
 
-        values['q'] = "%x" % (hsh)
+        values['q'] = "%s" % (hsh[:10])
 
     if endpoint == 'components.get_big_css':
         res = handle_request_to(endpoint, **values)
-        hsh = hash(res)
+        hsh = gethash(res)
 
-        values['q'] = "%x" % (hsh)
+        values['q'] = "%s" % (hsh[:10])
 
     # if the endpoint is a filename, we use timestamp hashing
     # (but we should really use content hashing, i guess)
