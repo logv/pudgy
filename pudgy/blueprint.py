@@ -125,7 +125,7 @@ def build_css_package(files, components):
     for file in files:
         filename = file.strip(".")
 
-        with open(os.path.join(flask.current_app.static_folder, filename)) as f:
+        with util.open(os.path.join(flask.current_app.static_folder, filename)) as f:
             all.append(CSSComponent.CSS_LOADER.transform(f.read()))
 
     for component in components:
@@ -330,7 +330,7 @@ def compress_request(response):
 def get_sass(filename):
     filename = os.path.normpath(filename)
     fname = os.path.join(flask.current_app.static_folder, filename)
-    with open(fname) as f:
+    with util.open(fname) as f:
         return sass.compile(string=f.read())
 
 def add_stylesheet(filename):

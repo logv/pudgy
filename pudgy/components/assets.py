@@ -25,7 +25,7 @@ class AssetLoader(Component):
     @classmethod
     def render_file_to_js(cls, filename, error_if_missing=False):
         try:
-            with open(filename, "r") as f:
+            with util.open(filename, "r") as f:
                 js = cls.transform_and_wrap_in_js(f.read())
                 return js
         except IOError as e:
@@ -81,7 +81,7 @@ class CssAsset(AssetLoader):
     def get_definitions(cls):
         static_folder = flask.current_app.static_folder
         try:
-            with open(os.path.join(static_folder, "definitions.sass")) as f:
+            with util.open(os.path.join(static_folder, "definitions.sass")) as f:
                 return f.read()
         except:
             return ""

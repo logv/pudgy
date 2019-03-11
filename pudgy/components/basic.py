@@ -23,7 +23,7 @@ def touch(fname):
 
 def openfile(fname):
     try:
-        return open(fname)
+        return util.open(fname)
     except IOError as e:
         if CREATE_FILES:
             basedir = os.path.dirname(fname)
@@ -34,7 +34,7 @@ def openfile(fname):
             touch(fname)
 
             print("CREATED FILE FOR COMPONENT:", fname)
-            return open(fname)
+            return util.open(fname)
         else:
             print(" * use %s=1 to auto-create" % RAPID_PUDGY_KEY, fname)
             raise e

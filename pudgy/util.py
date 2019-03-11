@@ -3,6 +3,15 @@ import time
 import os
 
 import flask
+import io
+
+import sys
+if sys.version_info[0] >= 3:
+    unicode = str
+
+
+def open(fname, mode="r", encoding="utf-8"):
+    return io.open(fname, mode, encoding=encoding)
 
 def inheritors(klass):
     subclasses = set()
@@ -59,9 +68,10 @@ def memoize(func):
 
 def gethash(v):
     m = hashlib.md5()
-    h = str(v).strip().encode("utf-8")
+    h = unicode(v).strip()
+    u = h.encode("utf-8")
 
-    m.update(h)
+    m.update(u)
 
     return m.hexdigest()
 
