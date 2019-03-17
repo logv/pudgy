@@ -470,7 +470,6 @@ $P.set_versions = function(versions) {
 };
 
 $P.bulk_load_components = function(components) {
-  console.log("PRELOADABLE", _.keys(components));
   _.extend(PRELOAD_COMPONENTS, components);
 }
 

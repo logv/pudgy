@@ -24,6 +24,8 @@ simple_component = Blueprint('components', __name__,
 
 from . import prelude, util, components
 
+PR=prelude
+
 proxy = components.proxy
 
 components.set_base_dir(simple_component.root_path)
@@ -299,7 +301,7 @@ def marshal_components(prelude=True):
     return jinja2.Markup(render_template("inject_components.html",
         dirhash_lookup=dirhash_lookup, css_package=big_package, activations=activations,
         postfix=postfix, prelude=prelude, html=html, url_for=dated_url_for,
-        versions=json.dumps(version_dict)))
+        preload_components=PR.PRELOAD_COMPONENTS, versions=json.dumps(version_dict)))
 
 def render_component(name, **kwargs):
     found = get_component_by_name(name)

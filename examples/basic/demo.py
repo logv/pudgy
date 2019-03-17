@@ -7,6 +7,7 @@ import pudgy
 
 app = flask.Flask(__name__)
 pudgy.register_blueprint(app)
+pudgy.preload_components()
 
 from .demo_components import DemoPage, DemoComponent
 

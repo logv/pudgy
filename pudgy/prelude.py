@@ -27,6 +27,12 @@ def use_jquery():
         PRELUDE["jquery"] = d("vendor/jquery-3.3.1.min.js")
         add_prelude_line("window.jQuery = require('jquery')")
 
+PRELOAD_COMPONENTS="RELEASE" in os.environ
+def preload_components(v=True):
+    global PRELOAD_COMPONENTS
+    PRELOAD_COMPONENTS = v
+
+
 def add_to_prelude(name, fname):
     PRELUDE[name] = fname
 
