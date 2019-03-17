@@ -94,17 +94,15 @@ def handle_request_to(endpoint, **values):
         res = flask.current_app.dispatch_request()
     return res
 
+CACHEABLE_ASSET_ENDPOINTS = [
+    'components.get_prelude',
+    'components.get_big_css',
+    'components.get_component_specs' ]
 def dated_url_for(endpoint, **values):
     app = flask.current_app
     # we know prelude always returns a string, so
     # we use python string hashing
-    if endpoint == 'components.get_prelude':
-        res = handle_request_to(endpoint, **values)
-        hsh = gethash(res)
-
-        values['q'] = "%s" % (hsh[:10])
-
-    if endpoint == 'components.get_big_css':
+    if endpoint in CACHEABLE_ASSET_ENDPOINTS:
         res = handle_request_to(endpoint, **values)
         hsh = gethash(res)
 

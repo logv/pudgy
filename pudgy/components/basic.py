@@ -151,6 +151,10 @@ class JSComponent(Activatable, Component):
             if k == "__versions__":
                 continue
 
+            if rendered[k].find("$P._missing") == 0:
+                ret[k] = 0;
+                continue
+
             ret[k] = util.gethash(rendered[k].strip())
         return ret
 
@@ -198,6 +202,7 @@ class JSComponent(Activatable, Component):
 
         def render_requires(component, basedir):
             ret = {}
+            missing = {}
 
             if check_intersection:
                 requires = set(component.get_requires()).intersection(set(requested))
@@ -212,11 +217,15 @@ class JSComponent(Activatable, Component):
                     ret.update(render_requires_for_js(js, os.path.dirname(jsp)))
                 else:
                     ret[p] = '$P._missing("%s");' % (p)
+                    missing[p] = 1
                     continue
 
             versions = {}
             for p in ret:
-                versions[p] = util.gethash(ret[p])
+                if not p in missing:
+                    versions[p] = util.gethash(ret[p])
+                else:
+                    versions[p] = 0
 
             ret["__versions__"] = versions
             return ret

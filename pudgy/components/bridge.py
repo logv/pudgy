@@ -119,7 +119,6 @@ class ServerBridge(ClientBridge):
 mark_virtual(
     ClientBridge,
     ServerBridge,
-    ComponentBridge,
     Proxy,
     HTMLProxy
 )

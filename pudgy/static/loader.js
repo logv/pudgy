@@ -7,6 +7,7 @@ window._ = _;
 window.reqwest = reqwest;
 
 var LOADED_COMPONENTS = {};
+var PRELOAD_COMPONENTS = {};
 var COMPONENTS = {};
 var PENDING = {};
 
@@ -161,7 +162,12 @@ function get_storage_key(v) {
 }
 
 function check_local_storage(dirhash, req, def) {
-  var version = _versions[dirhash][req];
+  versions = _versions[dirhash]
+  if (!versions) {
+    return;
+  }
+
+  var version = versions[req];
   if (!window.localStorage) {
     return;
   }
@@ -342,7 +348,14 @@ function add_component_css(component) {
   if (!component || _injected_css[component] || _requested_css[component]) {
     return
   }
+
   _requested_css[component] = true;
+
+  if (PRELOAD_COMPONENTS[component]) {
+    var cmp = PRELOAD_COMPONENTS[component];
+    if (cmp) { inject_css(component, cmp.css); }
+    return
+  }
 
   $P._boot.pkg(component, function(res) {
     _.each(res, function(cmp, name) {
@@ -422,6 +435,15 @@ function load_component(componentName, cb) {
 
   PENDING[componentName] = [cb];
 
+  if (PRELOAD_COMPONENTS[componentName]) {
+    _.defer(function() {
+      make_component_class(componentName, PRELOAD_COMPONENTS[componentName])
+    });
+    return
+  }
+
+  console.log("BOOTING", componentName);
+
   $P._boot.pkg(componentName, function(name, res) {
     _.each(res, function(cmpName, cmp) {
       _.each(cmp.defines, function(v, k) {
@@ -437,9 +459,20 @@ function load_component(componentName, cb) {
 
 $P.set_versions = function(versions) {
   _.each(versions, function(v, k) {
-    _versions[k] = _.extend(_versions[k] || {}, v);
+    _versions[k] = _versions[k] || {};
+    _.each(v, function(vv, kk) {
+      if (!vv) { return; }
+
+      _versions[k][kk] = vv;
+    });
+
   });
 };
+
+$P.bulk_load_components = function(components) {
+  console.log("PRELOADABLE", _.keys(components));
+  _.extend(PRELOAD_COMPONENTS, components);
+}
 
 window.$P = _.extend($P, window.$P || {});
 var _versions = {};

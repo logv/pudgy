@@ -264,6 +264,15 @@ NAMESPACES = defaultdict(dict)
 COMPONENT_NAMES = {}
 
 @memoize
+def list_components():
+    r = []
+    for c in inheritors(Component):
+        if not c.__name__ in VIRTUAL_COMPONENTS:
+            r.append(c)
+
+    return r
+
+@memoize
 def validate_components():
     valid = 0
     broken = []

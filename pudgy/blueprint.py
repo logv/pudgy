@@ -72,6 +72,32 @@ def get_component_by_name(component):
 def index():
     pass
 
+@memoize
+@simple_component.route("/specs.js")
+def get_component_specs():
+    cs = components.list_components()
+
+    ret = {}
+    versions = {}
+    for found in cs:
+        name = found.__name__
+        if found:
+            ret[name] = found.get_package_object()
+            versions[name] = util.gethash(json.dumps(ret[name]))
+
+    ret["__versions__"] = versions
+
+    # we need to inject the components into the page...
+
+
+    js = json.dumps(ret)
+    all = "$P.bulk_load_components(%s)" % (js)
+    r = flask.Response(all)
+    r.headers["Content-Type"] = "text/js"
+    return add_caching(r)
+
+
+
 @simple_component.route('/<component>/invoke/<fn>', methods=['POST'])
 def invoke(component, fn):
     found = get_component_by_name(component)

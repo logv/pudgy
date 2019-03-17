@@ -5,6 +5,8 @@
 <script>
   $P._namespaces = {{ dirhash_lookup | safe }}
 </script>
+
+<script src="{{ url_for('components.get_component_specs') }}" ></script>
 {%- endif -%}
 <script type="text/javascript" name="setversions"> $P.set_versions({{ versions | safe }}); </script>
 
