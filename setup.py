@@ -14,7 +14,7 @@ setup(
     author_email='okayzed+pudgy@gmail.com',
     include_package_data=True,
     packages=['pudgy', 'pudgy.components'],
-    url='http://github.com/raisjn/pudgy',
+    url='http://github.com/logv/pudgy',
     license='MIT',
     description='a component library for flask',
     long_description=open('README.md').read(),
