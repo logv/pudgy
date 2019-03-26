@@ -129,9 +129,18 @@ module.exports = {
     util.call_on_component(id, fn, args, kwargs);
   },
   activate_component: function(id, name, context, display_immediately, ref) {
-    util.activate_component(id, name, context, display_immediately, ref, function(d) {
-      if (!display_immediately) { $P._require_css(name); }
-      return d;
+    $P._load(name, function(cls) {
+      util.activate_component(id, name, cls, context, ref, function(d) {
+        if (cls.exports) { _.extend(d, cls.exports); }
+
+        if (d.initialize) {
+          d.initialize(context);
+        }
+
+        if (!display_immediately) { $P._require_css(name); }
+
+        return d;
+      });
     });
   }
 };

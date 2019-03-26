@@ -442,8 +442,6 @@ function load_component(componentName, cb) {
     return
   }
 
-  console.log("BOOTING", componentName);
-
   $P._boot.pkg(componentName, function(name, res) {
     _.each(res, function(cmpName, cmp) {
       _.each(cmp.defines, function(v, k) {
