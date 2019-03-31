@@ -357,7 +357,7 @@ def compress_request(response):
 
     return response
 
-@simple_component.route('/css/<filename>')
+@simple_component.route('/css/<path:filename>')
 def get_sass(filename):
     filename = os.path.normpath(filename)
     fname = os.path.join(flask.current_app.static_folder, filename)
