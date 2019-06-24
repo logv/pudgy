@@ -33,8 +33,13 @@ window._shared_require = function(r) {
   }
 }
 
+var _stubbed = {};
 window._make_require_func = function(base, basehash) {
   var require = function(mod) {
+    if (_stubbed[mod]) {
+      return _stubbed[mod];
+    }
+
     if (mod[0] == "." && mod[1] == "/") {
       mod = (base + mod.replace(/^.\//, "/"));
     }
@@ -76,6 +81,10 @@ window._make_require_func = function(base, basehash) {
 
     return modules[mod];
   };
+
+  require.stub = function(name, mod) {
+    _stubbed[name] = mod;
+  }
 
   return require;
 }
