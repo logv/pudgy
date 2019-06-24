@@ -31,7 +31,7 @@ class ClientBridge(JSComponent):
 # A server bridge allows a backbone component to invoke bridge methods on the
 # class that inherits from it
 class ServerBridge(ClientBridge):
-    __remote_calls__ = {}
+    __remote_calls__ = None
 
     @classmethod
     def get_class_dependencies(cls):
@@ -47,7 +47,7 @@ class ServerBridge(ClientBridge):
     ex.__bridge.{{ fn }} = m.exports.add_invocation("{{ cls }}", "{{ fn }}");
             """.strip()
 
-        for c in cls.__remote_calls__:
+        for c in cls.__remote_calls__ or {}:
             all.append(pystache.render(t, {
                 "fn" : c,
                 "cls" : cls.__name__
@@ -62,6 +62,9 @@ class ServerBridge(ClientBridge):
 
     @classmethod
     def api(cls, fn):
+        if cls.__remote_calls__ is None:
+            cls.__remote_calls__ = {}
+
         cls.__remote_calls__[fn.__name__] = fn
 
     @classmethod
