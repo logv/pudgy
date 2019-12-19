@@ -18,7 +18,7 @@ def hello():
         about="this async_component is async and is rendered at the end of the request"
     )
     async_component.set_delay(2)
-    async_component.async()
+    async_component.run_async()
 
     component = DemoComponent()
     # this component takes one second to prepare and will

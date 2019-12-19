@@ -135,7 +135,7 @@ class Pagelet(JSComponent):
         if flask.request:
             flask.request.pudgy.pagelets.add(self)
 
-    def async(self):
+    def run_async(self):
         self.__async__ = True
 
     def render(self):
